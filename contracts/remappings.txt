@@ -1,0 +1,7 @@
+cog/=lib/cog/src/
+ds-contracts/=lib/ds-contracts/src/
+ds-test/=lib/forge-std/lib/ds-test/src/
+erc4626-tests/=lib/ds-contracts/lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-std/=lib/forge-std/src/
+openzeppelin-contracts/=lib/ds-contracts/lib/openzeppelin-contracts/
+solmate/=lib/ds-contracts/lib/solmate/src/

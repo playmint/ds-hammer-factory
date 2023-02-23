@@ -1,0 +1,91 @@
+# @format
+
+fragment stateFragment on State {
+    block
+    # fetch seekers
+    seekers: nodes(match: { kinds: ["Seeker"] }) {
+        id
+        seekerID: key
+        # there are always two location edges
+        # the "departure" is the edge with key=0
+        #     this points to the last known tile position recorded
+        #     the weight of the departure edge is the block time of the last move
+        # the "destination" is the edge with key=0
+        #     this points to the where the seeker is heading.
+        #     the weight of the destination edge is the time of arrival
+        #     if the current block time >= arrival time then this is the CURRENT LOCATION
+        #     but if not, you need to use the departure edge time to work out where we are
+        location: edges(match: { kinds: ["Tile"], via: [{ rel: "Location" }] }) {
+            key # 0=LAST_LOCATION, 1=DEST_LOCATION
+            time: weight
+            tile: node {
+                keys
+            }
+        }
+        owner: node(match: { kinds: ["Player"], via: [{ rel: "Owner" }] }) {
+            addr: key
+        }
+    }
+
+    buildings: nodes(match: { kinds: ["Building"] }) {
+        id
+        location: edge(match: { kinds: ["Tile"], via: [{ rel: "Location" }] }) {
+            tile: node {
+                id
+                keys
+            }
+        }
+        owner: node(match: { kinds: ["Player"], via: [{ rel: "Owner" }] }) {
+            addr: key
+        }
+        kind: node(match: { kinds: ["BuildingKind"], via: [{ rel: "Is" }] }) {
+            id
+            addr: key
+        }
+    }
+
+    buildingKinds: nodes(match: { kinds: ["BuildingKind"] }) {
+        id
+        addr: key
+    }
+}
+
+query GetState($extID: ID!) {
+    game(id: "DAWNSEEKERS") {
+        state {
+            ...stateFragment
+        }
+    }
+    extension: game(id: $extID) {
+        id
+        name
+        url
+        state {
+            seekers: nodes(match: { kinds: ["Seeker"] }) {
+                seekerID: id
+                building: node(match: { kinds: ["Building"], via: [{ rel: "CheckedIn" }] }) {
+                    id
+                }
+            }
+        }
+    }
+}
+
+mutation signin($gameID: ID!, $session: String!, $auth: String!) {
+    signin(gameID: $gameID, session: $session, ttl: 9999, scope: "0xffffffff", authorization: $auth)
+}
+
+mutation signout($gameID: ID!, $session: String!, $auth: String!) {
+    signout(gameID: $gameID, session: $session, authorization: $auth)
+}
+
+mutation dispatch($gameID: ID!, $action: String!, $auth: String!) {
+    dispatch(
+        gameID: $gameID
+        action: $action # encoded action bytes
+        authorization: $auth # session's signature of $action
+    ) {
+        id
+        status
+    }
+}
