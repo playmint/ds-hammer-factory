@@ -1,92 +1,105 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { CompoundKeyKind, WeightKind, State } from "cog/State.sol";
-import { SessionRouter } from "cog/SessionRouter.sol";
-import { BaseDispatcher, Rule, Context } from "cog/Dispatcher.sol";
-import { StateGraph } from "cog/StateGraph.sol";
-import { Game, BaseGame } from "cog/Game.sol";
+import {CompoundKeyKind, WeightKind, State} from "cog/State.sol";
+import {SessionRouter} from "cog/SessionRouter.sol";
+import {BaseDispatcher, Rule, Context} from "cog/Dispatcher.sol";
+import {StateGraph} from "cog/StateGraph.sol";
+import {Game, BaseGame} from "cog/Game.sol";
 
-import { Schema as DawnseekersUtils, Kind as DawnseekersKind } from "ds-contracts/schema/Schema.sol";
-import { Actions as DawnseekersActions } from "ds-contracts/actions/Actions.sol";
+import {
+    Schema as DSUtils,
+    Kind as DSKind,
+    ResourceKind as DSResourceKind,
+    Node as DSNode
+} from "ds-contracts/schema/Schema.sol";
+import {Actions as DSActions} from "ds-contracts/actions/Actions.sol";
 
-import { console } from "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 error SeekerMustBeLocatedAtBuilding();
 
+uint64 constant HAMMER_WOOD_QTY = 20;
+uint64 constant HAMMER_IRON_QTY = 12;
+string constant HAMMER_NAME = "Hammer";
+
 // define a relationship between two nodes
 
-interface Rel {
-    function CheckedIn() external;
-}
+// interface Rel {
+// }
 
 // define some helpers for working with our state
 
-library Utils {
-    function checkInSeekerAtBuilding(State state, bytes24 seekerID, bytes24 buildingID) internal {
-        return state.set(Rel.CheckedIn.selector, 0x0, seekerID, buildingID, 0);
-    }
-    function getWhereSeekerCheckedIn(State state, bytes24 seekerID) internal view returns (bytes24 buildingID) {
-        (buildingID,) = state.get(Rel.CheckedIn.selector, 0x0, seekerID);
-    }
-}
+// library Utils {
+// }
 
 // define an action that seekers can perform at our building
 
 interface Actions {
-    function CHECK_IN(bytes24 seekerID, bytes24 buildingID) external;
+    function CRAFT_HAMMER(
+        bytes24 seekerID,
+        bytes24 buildingID,
+        bytes24 inBag,
+        bytes24 destBag,
+        uint8 destItemSlot // empty slot
+    ) external;
 }
 
 // define a rule that implements what happens when the action is executed
 
-contract CheckInRule is Rule {
-
+contract CraftRule is Rule {
     Game dawnseekers;
+    bytes24 hammerID;
 
-    constructor(Game dawnseekersAddr) {
+    constructor(Game dawnseekersAddr, bytes24 _hammerID) {
         dawnseekers = dawnseekersAddr;
+        hammerID = _hammerID;
     }
 
     function reduce(State ourState, bytes calldata action, Context calldata ctx) public returns (State) {
-
         // log which seeker said hello
-        if (bytes4(action) == Actions.CHECK_IN.selector) {
+        if (bytes4(action) == Actions.CRAFT_HAMMER.selector) {
             // decode action
-            (bytes24 seekerID, bytes24 buildingID) = abi.decode(action[4:], (bytes24, bytes24));
+            (bytes24 seekerID, bytes24 buildingID, bytes24 inBag, bytes24 destBag, uint8 destItemSlot) =
+                abi.decode(action[4:], (bytes24, bytes24, bytes24, bytes24, uint8));
 
-            // we only want to allow a seeker to "check in" to our building if they are
+            // we only want to allow a seeker to "craft" at our building if they are
             // standing on the same tile as the building.
             // so check that seeker and building location are the same by talking to dawnseekers' state
             State ds = dawnseekers.getState();
-            bytes24 seekerTile = DawnseekersUtils.getCurrentLocation(ds, seekerID, ctx.clock);
-            bytes24 buildingTile = DawnseekersUtils.getFixedLocation(ds, buildingID);
+            bytes24 seekerTile = DSUtils.getCurrentLocation(ds, seekerID, ctx.clock);
+            bytes24 buildingTile = DSUtils.getFixedLocation(ds, buildingID);
             if (seekerTile != buildingTile) {
                 revert SeekerMustBeLocatedAtBuilding();
             }
 
             // store that the seeker is now "checked in" to the building
             // each seeker can only be "checked in" to one of our buildings at a time
-            Utils.checkInSeekerAtBuilding(ourState, seekerID, buildingID);
+            craftHammer(inBag, destBag, destItemSlot);
         }
 
         return ourState;
     }
 
+    function craftHammer(bytes24 inBag, bytes24 destBag, uint8 destItemSlot) public {
+        dawnseekers.getDispatcher().dispatch(
+            abi.encodeCall(DSActions.CRAFT_EQUIPABLE, (inBag, hammerID, destBag, destItemSlot))
+        );
+    }
 }
 
 // define a Game to advertise our game's state to be indexed, session routing endpoint, and action handlers
 
 contract Extension is BaseGame {
-
-    constructor(Game dawnseekers) BaseGame("MyDawnseekersExtension", "") {
+    constructor(Game dawnseekers) BaseGame("HammerFactory", "") {
         // create a state
         StateGraph state = new StateGraph();
 
         // create a session router
         SessionRouter router = new SessionRouter();
 
-        // create a rule to handle the SIGN_GUESTBOOK action
-        Rule guestbookRule = new CheckInRule(dawnseekers);
+        bytes24 hammerID = registerItem(dawnseekers);
+        Rule craftRule = new CraftRule(dawnseekers, hammerID);
 
         // set plugin URL with our address as a param
         // FIXME: we probably should not be using the game url for this
@@ -95,7 +108,7 @@ contract Extension is BaseGame {
         // configure our dispatcher with state, rules and trust the router
         BaseDispatcher dispatcher = new BaseDispatcher();
         dispatcher.registerState(state);
-        dispatcher.registerRule(guestbookRule);
+        dispatcher.registerRule(craftRule);
         dispatcher.registerRouter(router);
 
         // update the game with this config
@@ -104,22 +117,41 @@ contract Extension is BaseGame {
         _registerDispatcher(dispatcher);
 
         // register the ds node types we are borrowing
-        state.registerNodeType(DawnseekersKind.Seeker.selector, "Seeker", CompoundKeyKind.UINT160);
-        state.registerNodeType(DawnseekersKind.Building.selector, "Building", CompoundKeyKind.INT16_ARRAY);
-
-        // register our "CheckedIn" edge
-        state.registerEdgeType(Rel.CheckedIn.selector, "CheckedIn", WeightKind.UINT64);
+        // state.registerNodeType(DSKind.Seeker.selector, "Seeker", CompoundKeyKind.UINT160);
+        // state.registerNodeType(DSKind.Building.selector, "Building", CompoundKeyKind.INT16_ARRAY);
+        // state.registerNodeType(DSKind.Item.selector, "Item", CompoundKeyKind.STRING);
 
         // register our extension as a building kind
         dawnseekers.getDispatcher().dispatch(
-            abi.encodeCall(DawnseekersActions.REGISTER_BUILDING_KIND, (
-                address(this) // address of thing that will act as building
-            ))
+            abi.encodeCall(
+                DSActions.REGISTER_BUILDING_KIND,
+                (address(this)) // address of thing that will act as building
+            )
+        );
+    }
+
+    uint8 constant MAX_CRAFT_INPUT_ITEMS = 4;
+
+    function registerItem(Game dawnseekers) internal returns (bytes24) {
+        bytes24[MAX_CRAFT_INPUT_ITEMS] memory inputItems;
+        uint64[MAX_CRAFT_INPUT_ITEMS] memory inputQty;
+
+        // Recipe
+        inputItems[0] = DSNode.Resource(DSResourceKind.WOOD);
+        inputQty[0] = HAMMER_WOOD_QTY;
+        inputItems[1] = DSNode.Resource(DSResourceKind.IRON);
+        inputQty[1] = HAMMER_IRON_QTY;
+
+        // Boolean is the 'stackable' flag
+        dawnseekers.getDispatcher().dispatch(
+            abi.encodeCall(DSActions.REGISTER_ITEM, (inputItems, inputQty, false, HAMMER_NAME))
         );
 
+        return DSNode.Item(inputItems, inputQty, false, HAMMER_NAME);
     }
 
     bytes16 private constant _SYMBOLS = "0123456789abcdef";
+
     function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
         bytes memory buffer = new bytes(2 * length + 2);
         buffer[0] = "0";
@@ -131,6 +163,4 @@ contract Extension is BaseGame {
         require(value == 0, "Strings: hex length insufficient");
         return string(buffer);
     }
-
 }
-
