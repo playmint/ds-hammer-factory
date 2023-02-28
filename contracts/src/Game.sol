@@ -57,8 +57,10 @@ contract CraftRule is Rule {
     }
 
     function reduce(State ourState, bytes calldata action, Context calldata ctx) public returns (State) {
+        console.log("CraftRule::reduce() ", uint32(bytes4(action)));
         // log which seeker said hello
         if (bytes4(action) == Actions.CRAFT_HAMMER.selector) {
+            console.log("CraftRule::reduce(): Actions.CRAFT_HAMMER");
             // decode action
             (bytes24 seekerID, bytes24 buildingID, uint64 inBag, uint64 destBag, uint8 destItemSlot) =
                 abi.decode(action[4:], (bytes24, bytes24, uint64, uint64, uint8));
@@ -70,6 +72,7 @@ contract CraftRule is Rule {
             bytes24 seekerTile = DSUtils.getCurrentLocation(ds, seekerID, ctx.clock);
             bytes24 buildingTile = DSUtils.getFixedLocation(ds, buildingID);
             if (seekerTile != buildingTile) {
+                console.log("CraftRule::reduce(): Seeker not at building");
                 revert SeekerMustBeLocatedAtBuilding();
             }
 
@@ -82,9 +85,26 @@ contract CraftRule is Rule {
     }
 
     function craftHammer(bytes24 inBag, bytes24 destBag, uint8 destItemSlot) public {
+        console.log("CraftRule::craftHammer(): dispatching CRAFT_EQUIPABLE action");
+        console.log("inBag: ", toHexString(uint192(inBag), 24));
+        console.log("destBag: ", toHexString(uint192(destBag), 24));
         dawnseekers.getDispatcher().dispatch(
             abi.encodeCall(DSActions.CRAFT_EQUIPABLE, (inBag, hammerID, destBag, destItemSlot))
         );
+    }
+
+    bytes16 private constant _SYMBOLS = "0123456789abcdef";
+
+    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
+        bytes memory buffer = new bytes(2 * length + 2);
+        buffer[0] = "0";
+        buffer[1] = "x";
+        for (uint256 i = 2 * length + 1; i > 1; --i) {
+            buffer[i] = _SYMBOLS[value & 0xf];
+            value >>= 4;
+        }
+        require(value == 0, "Strings: hex length insufficient");
+        return string(buffer);
     }
 }
 
@@ -92,6 +112,7 @@ contract CraftRule is Rule {
 
 contract Extension is BaseGame {
     constructor(Game dawnseekers) BaseGame("HammerFactory", "") {
+        console.log("Hammer Factory constructor");
         // create a state
         StateGraph state = new StateGraph();
 

@@ -15,18 +15,24 @@ import {
     SliderThumb,
     SliderTrack,
     Spacer,
-    Tooltip
+    Tooltip,
+    Text
 } from '@chakra-ui/react';
 
 export interface CraftingProps extends ComponentProps {
     onCraft: () => void;
     recipe: any;
+    bagHasEmptySlot: boolean;
+    bagHasSufficientIngredients: boolean;
+    isWaitingToCraft: boolean;
+    craftFailed: boolean;
 }
 
 const StyledCrafting = styled('div')``;
 
 export const Crafting: FunctionComponent<CraftingProps> = (props: CraftingProps) => {
-    const { onCraft, ...otherProps } = props;
+    const { onCraft, isWaitingToCraft, craftFailed, bagHasEmptySlot, bagHasSufficientIngredients, ...otherProps } =
+        props;
     const [sliderValue, setSliderValue] = useState<number>(5);
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
@@ -80,7 +86,13 @@ export const Crafting: FunctionComponent<CraftingProps> = (props: CraftingProps)
                 </Slider>
                 <div>Recipe items</div>
                 <Spacer />
-                <Button onClick={onCraft}>Craft hammer x {sliderValue}</Button>
+                {bagHasEmptySlot && bagHasSufficientIngredients && !isWaitingToCraft && (
+                    <Button onClick={onCraft}>Craft hammer x {sliderValue}</Button>
+                )}
+                {isWaitingToCraft && <Text>Crafting hammer</Text>}
+                {craftFailed && <Text>Craft failed</Text>}
+                {!bagHasEmptySlot && <Text>No slots remaining on bag to craft item to</Text>}
+                {!bagHasSufficientIngredients && <Text>Insufficient ingredients in bag to craft item</Text>}
             </Flex>
         </StyledCrafting>
     );
