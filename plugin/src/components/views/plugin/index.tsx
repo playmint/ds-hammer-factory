@@ -4,25 +4,13 @@ import { FunctionComponent } from 'react';
 import styled from '@emotion/styled';
 import { ComponentProps } from '@app/types/component-props';
 import { useSessionContext } from '@app/contexts/cog-session-provider';
-import { CheckCircleIcon } from '@chakra-ui/icons';
-import { BigNumber } from 'ethers';
-import {
-    Tag,
-    List,
-    ListItem,
-    ListIcon,
-    Card,
-    Text,
-    CardHeader,
-    Heading,
-    CardFooter,
-    CardBody,
-    Button,
-    ButtonGroup,
-    Alert,
-    AlertIcon
-} from '@chakra-ui/react';
+import { BigNumber, utils } from 'ethers';
+import { Text, Heading, Alert, AlertIcon, Flex } from '@chakra-ui/react';
 import { useGetStateQuery } from '@app/types/queries';
+import { Crafting } from '@app/components/organisms/crafting';
+import { keccak256 } from 'ethers/lib/utils';
+import { Resource } from '@app/types/resource';
+import { useCogPlugin } from '@app/contexts/cog-plugin-provider';
 
 type TileCoords = [number, number, number] | null;
 
@@ -38,17 +26,37 @@ type Extension = NonNullable<ReturnType<typeof useGetStateQuery>['data']>['exten
 type DawnseekersState = Required<NonNullable<ReturnType<typeof useGetStateQuery>['data']>['game']>['state'];
 
 export interface PluginProps extends ComponentProps {
+    account: string;
     extension: Extension;
     dawnseekers: DawnseekersState;
     selectedTile?: TileCoords;
     selectedSeeker?: Seeker;
 }
 
-const StyledPlugin = styled.div``;
+const StyledPlugin = styled.div`
+    height: 100vh;
+    padding: 10px;
+
+    > .content {
+        height: 100%;
+
+        header {
+        }
+
+        main {
+            flex-grow: 1;
+        }
+    }
+
+    .help {
+        margin-top: 10px;
+    }
+`;
 
 export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
-    const { extension, dawnseekers, selectedSeeker, selectedTile } = props;
-    const { dispatch } = useSessionContext();
+    const { account, extension, dawnseekers, selectedSeeker, selectedTile } = props;
+    const { dispatch: dispatchActionPlugin } = useSessionContext();
+    const { dispatchAction: dispatchActionShell } = useCogPlugin();
 
     const selectedSeekerCurrentLocation = ((): TileCoords => {
         if (!selectedSeeker) {
@@ -92,7 +100,7 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
         return selectedBuilding.kind?.addr.toLowerCase() === extension.id.toLowerCase();
     })();
 
-    const handleClickCheckin = () => {
+    const handleCraft = () => {
         if (!selectedTile) {
             console.error('plugin: no selectedTile');
             return;
@@ -109,8 +117,82 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
             console.error('plugin: no extension');
             return;
         }
-        dispatch(extension.name, 'CHECK_IN', selectedSeeker.id, selectedBuilding.id);
+
+        // todo make sure we have an empty slot to add the hammer to
+        // todo fix transferring so that balance edges are cleanup up
+        // const nextEmptySlot = selectedSeeker.bags[0].slots.find((slot) => slot.balance === 0);
+        //
+        // if (!nextEmptySlot) {
+        //     console.error('No inventory space for the hammer!');
+        //     return;
+        // }
+
+        // make item id from inputs
+
+        // create a bag
+        // bag id is keccak tile coords + building id + seeker id?
+        const abi = utils.defaultAbiCoder;
+        const bagId =
+            '0x' +
+            (
+                BigInt(
+                    keccak256(
+                        abi.encode(
+                            ['int16', 'int16', 'int16', 'bytes24', 'bytes24'],
+                            [...selectedTile, selectedSeeker.id, selectedBuilding.id]
+                        )
+                    )
+                ) & BigInt('0xFFFFFFFFFFFFFFFF')
+            ).toString(16);
+
+        const equipSlot = 1; // todo get next empty equip slot
+        dispatchActionShell('DAWNSEEKERS', 'DEV_SPAWN_BAG', bagId, account, selectedSeeker.id, equipSlot, [], []);
+
+        // transfer things into it
+        const fromId = selectedSeeker.id;
+        const toId = selectedSeeker.id;
+        const fromEquipIndex = 0;
+        const toEquipIndex = 1;
+
+        // wood
+        dispatchActionShell(
+            'DAWNSEEKERS',
+            'TRANSFER_ITEM_SEEKER',
+            selectedSeeker.id,
+            [fromId, toId],
+            [fromEquipIndex, toEquipIndex],
+            [0, 0],
+            20
+        );
+
+        // iron
+        dispatchActionShell(
+            'DAWNSEEKERS',
+            'TRANSFER_ITEM_SEEKER',
+            selectedSeeker.id,
+            [fromId, toId],
+            [fromEquipIndex, toEquipIndex],
+            [1, 1],
+            12
+        );
+
+        // transfer ownership of the bag to the building??
+
+        // craft!
+        const targetSlotIndex = 3;
+        const destinationBagId = '0x' + (BigInt(selectedSeeker.bags[0].id) & BigInt('0xFFFFFFFFFFFFFFFF')).toString(16);
+        dispatchActionPlugin(
+            extension.name,
+            'CRAFT_HAMMER',
+            selectedSeeker.id,
+            selectedBuilding.id,
+            bagId,
+            destinationBagId,
+            targetSlotIndex
+        );
     };
+
+    const showContent = selectedTile && selectedSeeker && selectedTileHasBuildingOfExpectedKind;
 
     const help = (() => {
         if (!selectedTile) {
@@ -144,60 +226,34 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
 
     const subtitle = (() => {
         if (selectedSeekerIsOnTile && selectedTileHasBuildingOfExpectedKind) {
-            return <Text>Welcome to {extension.name}, click check-in to register your visit</Text>;
+            return <Text>Welcome to {extension.name}: The hammer factory!</Text>;
         } else if (selectedTileHasBuildingOfExpectedKind) {
-            return <Text>Move your seeker onto this tile to enable check-in</Text>;
+            return <Text>Move your seeker onto this tile to enable crafting</Text>;
         } else {
-            return <Text>Select a {extension.name} building to see who has visited</Text>;
+            return <Text>Select a {extension.name} building to see crafting options</Text>;
         }
     })();
 
-    const listOfCheckedIn = extension.state.seekers
-        .filter((s) => s?.building?.id == selectedBuilding?.id)
-        .map((s) => (
-            <ListItem key={s.seekerID}>
-                <ListIcon as={CheckCircleIcon} color="green.500" />
-                {s.seekerID.slice(-8)} {s.seekerID == selectedSeeker?.id ? <Tag>You</Tag> : undefined}
-            </ListItem>
-        ));
-
-    const seekerCheckedIn =
-        selectedSeeker &&
-        !!extension.state.seekers.find(
-            (s) => s.building?.id == selectedBuilding?.id && selectedSeeker.id == s?.seekerID
-        );
-
     return (
         <StyledPlugin>
-            <Card>
-                <CardHeader>
+            <Flex direction="column" className="content">
+                <header className="crafting-header">
                     <Heading size="md">{extension.name}</Heading>
                     {subtitle}
-                </CardHeader>
-                <CardBody>
-                    {help}
-                    <Text>
-                        {listOfCheckedIn.length > 0
-                            ? 'Recent seeker visitors:'
-                            : selectedTileHasBuildingOfExpectedKind
-                            ? 'no seekers visited'
-                            : ''}
-                    </Text>
-                    <List>{listOfCheckedIn}</List>
-                </CardBody>
-                <CardFooter>
-                    <ButtonGroup spacing="2">
-                        <Button
-                            isDisabled={!selectedSeekerIsOnTile || seekerCheckedIn}
-                            variant="outline"
-                            colorScheme="blue"
-                            onClick={handleClickCheckin}
-                        >
-                            Check In
-                        </Button>
-                    </ButtonGroup>
-                </CardFooter>
-            </Card>
+                    <div className="help">{help}</div>
+                </header>
+                <main>
+                    {showContent && (
+                        <Crafting
+                            onCraft={handleCraft}
+                            recipe={[
+                                { id: Resource.Wood, amount: 20 },
+                                { id: Resource.Iron, amount: 12 }
+                            ]}
+                        />
+                    )}
+                </main>
+            </Flex>
         </StyledPlugin>
     );
 };

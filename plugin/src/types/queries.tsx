@@ -426,6 +426,16 @@ export type StateFragmentFragment = {
             time: number;
             tile: { __typename?: 'Node'; keys: Array<any> };
         }>;
+        bags: Array<{
+            __typename?: 'Node';
+            id: string;
+            slots: Array<{
+                __typename?: 'Edge';
+                slot: number;
+                balance: number;
+                resource: { __typename?: 'Node'; id: string };
+            }>;
+        }>;
         owner?: { __typename?: 'Node'; addr?: any | null } | null;
     }>;
     buildings: Array<{
@@ -458,6 +468,16 @@ export type GetStateQuery = {
                     key: number;
                     time: number;
                     tile: { __typename?: 'Node'; keys: Array<any> };
+                }>;
+                bags: Array<{
+                    __typename?: 'Node';
+                    id: string;
+                    slots: Array<{
+                        __typename?: 'Edge';
+                        slot: number;
+                        balance: number;
+                        resource: { __typename?: 'Node'; id: string };
+                    }>;
                 }>;
                 owner?: { __typename?: 'Node'; addr?: any | null } | null;
             }>;
@@ -525,6 +545,16 @@ export const StateFragmentFragmentDoc = gql`
                 time: weight
                 tile: node {
                     keys
+                }
+            }
+            bags: nodes(match: { kinds: ["Bag"], via: { rel: "Equip", dir: OUT } }) {
+                id
+                slots: edges(match: { kinds: ["Resource", "Item"], via: { rel: "Balance" } }) {
+                    slot: key
+                    balance: weight
+                    resource: node {
+                        id
+                    }
                 }
             }
             owner: node(match: { kinds: ["Player"], via: [{ rel: "Owner" }] }) {
