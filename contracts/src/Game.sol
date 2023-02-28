@@ -39,8 +39,8 @@ interface Actions {
     function CRAFT_HAMMER(
         bytes24 seekerID,
         bytes24 buildingID,
-        bytes24 inBag,
-        bytes24 destBag,
+        uint64 inBag,
+        uint64 destBag,
         uint8 destItemSlot // empty slot
     ) external;
 }
@@ -60,8 +60,8 @@ contract CraftRule is Rule {
         // log which seeker said hello
         if (bytes4(action) == Actions.CRAFT_HAMMER.selector) {
             // decode action
-            (bytes24 seekerID, bytes24 buildingID, bytes24 inBag, bytes24 destBag, uint8 destItemSlot) =
-                abi.decode(action[4:], (bytes24, bytes24, bytes24, bytes24, uint8));
+            (bytes24 seekerID, bytes24 buildingID, uint64 inBag, uint64 destBag, uint8 destItemSlot) =
+                abi.decode(action[4:], (bytes24, bytes24, uint64, uint64, uint8));
 
             // we only want to allow a seeker to "craft" at our building if they are
             // standing on the same tile as the building.
@@ -75,7 +75,7 @@ contract CraftRule is Rule {
 
             // store that the seeker is now "checked in" to the building
             // each seeker can only be "checked in" to one of our buildings at a time
-            craftHammer(inBag, destBag, destItemSlot);
+            craftHammer(DSNode.Bag(inBag), DSNode.Bag(destBag), destItemSlot);
         }
 
         return ourState;

@@ -114,9 +114,11 @@ contract ExtensionTest is Test {
         DSUtils.setFixedLocation(dsState, DSKinds.Building(0, 0, 1, -1), DSKinds.Tile(0, 0, 1, -1));
 
         bytes24 seekerID = DSKinds.Seeker(1);
-        bytes24 destBag = _spawnBagEmpty(1, aliceAccount, seekerID, 0);
-        bytes24 inBag = _spawnBagWithResources(
-            2, // bagID
+        uint64 destBagID = 1;
+        bytes24 destBag = _spawnBagEmpty(destBagID, aliceAccount, seekerID, 0);
+        uint64 inBagID = 2;
+        _spawnBagWithResources(
+            inBagID,
             aliceAccount,
             seekerID,
             1, // equip slot 1
@@ -130,8 +132,8 @@ contract ExtensionTest is Test {
                 (
                     seekerID, // seeker id (sid)
                     DSKinds.Building(0, 0, 1, -1), // building id
-                    inBag,
-                    destBag,
+                    inBagID,
+                    destBagID,
                     0 // destination slot
                 )
             )
