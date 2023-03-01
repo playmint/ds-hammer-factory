@@ -1,9 +1,9 @@
 /** @format */
 
 import { Fragment } from 'react';
-import { ChakraProvider } from '@chakra-ui/react';
+import { ChakraProvider, ThemeConfig } from '@chakra-ui/react';
 import Head from 'next/head';
-import { extendTheme, type ThemeConfig } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
 import { GlobalStyles } from '@app/styles/global.styles';
 import { CogPluginProvider } from '@app/contexts/cog-plugin-provider';
 import { COGSessionProvider } from '@app/contexts/cog-session-provider';

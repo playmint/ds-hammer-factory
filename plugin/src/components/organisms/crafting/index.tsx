@@ -1,98 +1,72 @@
 /** @format */
 
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent } from 'react';
 import styled from 'styled-components';
 import { ComponentProps } from '@app/types/component-props';
-import {
-    Button,
-    Flex,
-    Heading,
-    List,
-    ListItem,
-    Slider,
-    SliderFilledTrack,
-    SliderMark,
-    SliderThumb,
-    SliderTrack,
-    Spacer,
-    Tooltip,
-    Text
-} from '@chakra-ui/react';
+import { Button, Flex, List, ListItem, Alert, AlertIcon } from '@chakra-ui/react';
 
 export interface CraftingProps extends ComponentProps {
-    onCraft: () => void;
     recipe: any;
     bagHasEmptySlot: boolean;
     bagHasSufficientIngredients: boolean;
     isWaitingToCraft: boolean;
     craftFailed: boolean;
+    onCraft: () => void;
 }
 
-const StyledCrafting = styled('div')``;
+const StyledCrafting = styled('div')`
+    .recipe {
+        margin-bottom: 10px;
+    }
+
+    [role='alert'] {
+        margin-top: 5px;
+    }
+`;
 
 export const Crafting: FunctionComponent<CraftingProps> = (props: CraftingProps) => {
-    const { onCraft, isWaitingToCraft, craftFailed, bagHasEmptySlot, bagHasSufficientIngredients, ...otherProps } =
+    const { isWaitingToCraft, craftFailed, bagHasEmptySlot, bagHasSufficientIngredients, onCraft, ...otherProps } =
         props;
-    const [sliderValue, setSliderValue] = useState<number>(5);
-    const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
     return (
         <StyledCrafting {...otherProps}>
-            <Heading size="md">Hammer</Heading>
             <Flex direction="column" className="recipe">
-                <Flex>
+                <Flex className="recipe">
                     <div>
                         <span>Resources per hammer</span>
                         <List>
-                            <ListItem>2 Metal</ListItem>
-                            <ListItem>1 Wood</ListItem>
-                            <ListItem>1 Leather</ListItem>
+                            <ListItem>20 Wood</ListItem>
+                            <ListItem>12 Iron</ListItem>
                         </List>
                     </div>
-                    <div>Hammer icon</div>
                 </Flex>
-                <Slider
-                    id="slider"
-                    defaultValue={5}
-                    min={0}
-                    max={100}
-                    colorScheme="teal"
-                    onChange={(v) => setSliderValue(v)}
-                    onMouseEnter={() => setShowTooltip(true)}
-                    onMouseLeave={() => setShowTooltip(false)}
+                <Button
+                    onClick={onCraft}
+                    isLoading={isWaitingToCraft}
+                    loadingText="Forging a hammer"
+                    isDisabled={!bagHasEmptySlot || !bagHasSufficientIngredients || isWaitingToCraft}
                 >
-                    <SliderMark value={25} mt="1" ml="-2.5" fontSize="sm">
-                        25
-                    </SliderMark>
-                    <SliderMark value={50} mt="1" ml="-2.5" fontSize="sm">
-                        50
-                    </SliderMark>
-                    <SliderMark value={75} mt="1" ml="-2.5" fontSize="sm">
-                        75
-                    </SliderMark>
-                    <SliderTrack>
-                        <SliderFilledTrack />
-                    </SliderTrack>
-                    <Tooltip
-                        hasArrow
-                        bg="teal.500"
-                        color="white"
-                        placement="top"
-                        isOpen={showTooltip}
-                        label={`${sliderValue}`}
-                    >
-                        <SliderThumb />
-                    </Tooltip>
-                </Slider>
-                <div>Recipe items</div>
-                <Spacer />
-                {bagHasEmptySlot && bagHasSufficientIngredients && !isWaitingToCraft && (
-                    <Button onClick={onCraft}>Craft hammer x {sliderValue}</Button>
+                    Hammer time!
+                </Button>
+
+                {craftFailed && (
+                    <Alert status="error">
+                        <AlertIcon />
+                        Craft failed!
+                    </Alert>
                 )}
-                {isWaitingToCraft && <Text>Crafting hammer</Text>}
-                {craftFailed && <Text>Craft failed</Text>}
-                {!bagHasEmptySlot && <Text>No slots remaining on bag to craft item to</Text>}
-                {!bagHasSufficientIngredients && <Text>Insufficient ingredients in bag to craft item</Text>}
+                {!bagHasEmptySlot && (
+                    <Alert status="warning">
+                        <AlertIcon />
+                        You need more bag space to craft more hammers
+                    </Alert>
+                )}
+                {!bagHasSufficientIngredients && (
+                    <Alert status="warning">
+                        <AlertIcon />
+                        You need more resources to craft a hammer
+                    </Alert>
+                )}
             </Flex>
         </StyledCrafting>
     );

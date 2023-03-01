@@ -1,13 +1,10 @@
 /** @format */
 
-import { extendTheme } from '@chakra-ui/react';
+import { extendTheme, ThemeConfig } from '@chakra-ui/react';
 
-export const theme = extendTheme({
-    styles: {
-        global: () => ({
-            body: {
-                bg: 'transparent'
-            }
-        })
-    }
-});
+const config: ThemeConfig = {
+    useSystemColorMode: false,
+    initialColorMode: 'dark'
+};
+
+export const theme = extendTheme({ config });

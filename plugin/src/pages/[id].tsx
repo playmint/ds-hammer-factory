@@ -117,7 +117,7 @@ export const PluginWrapper: FunctionComponent<PluginProps> = (props: PluginProps
     return (
         <StyledPlugin>
             <Plugin
-                account={account}
+                account={account ?? ''}
                 extension={data.extension}
                 dawnseekers={data.game.state}
                 selectedSeeker={selectedSeeker}
@@ -137,7 +137,7 @@ export default function PluginPage() {
                 <title>Example plugin</title>
                 <meta property="og:title" content="Example plugin" key="title" />
             </Head>
-            <PluginWrapper width={450} height={400} anchor={Anchor.TopLeft} id={id} />
+            <PluginWrapper width={300} height={250} anchor={Anchor.TopLeft} id={id} />
         </Fragment>
     );
 }

@@ -134,14 +134,14 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
         dispatchActionShell('DAWNSEEKERS', 'DEV_SPAWN_BAG', bagId, account, selectedSeeker.id, equipSlot, [], []);
 
         // TODO: Get message from shell if the dispatch was a success and poll state for bag creation
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<string>((resolve) => {
             setTimeout(() => {
                 resolve(bagId);
             }, DISPATCH_WAIT_TIME);
         });
     };
 
-    const bagHasSufficientIngredients = (bag: Bag) => {
+    const bagHasSufficientResources = (bag: Bag) => {
         for (let i = 0; i < recipe.length; i++) {
             const ingredient = bag.slots.find((slot) => slot.resource.id == recipe[i].id);
             if (!ingredient || ingredient.balance < recipe[i].amount) return false;
@@ -179,7 +179,7 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
             return false;
         }
 
-        return new Promise<boolean>((resolve, reject) => {
+        return new Promise<boolean>((resolve) => {
             setTimeout(() => {
                 resolve(true);
             }, DISPATCH_WAIT_TIME);
@@ -187,14 +187,18 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
     };
 
     const getEmptySlotIndex = (bag: Bag) => {
-        if (bag.slots.length < 4) {
-            for (let i = 0; i < 4; i++) {
-                const existingSlot = bag.slots.find((slot) => slot.slot === i);
-                if (!existingSlot) {
-                    return i;
-                }
-            }
+        // find an existing empty slot
+        const slot = bag.slots.find((slot) => slot.balance === 0);
+        if (slot) {
+            return slot.slot;
         }
+
+        // if we can create a new empty slot then do so
+        if (bag.slots.length < 4) {
+            return bag.slots.length;
+        }
+
+        // fail
         return -1;
     };
 
@@ -323,7 +327,7 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
 
     const subtitle = (() => {
         if (selectedSeekerIsOnTile && selectedTileHasBuildingOfExpectedKind) {
-            return <Text>Welcome to {extension.name}: The hammer factory!</Text>;
+            return <Text>Craft the finest hammers in all the land</Text>;
         } else if (selectedTileHasBuildingOfExpectedKind) {
             return <Text>Move your seeker onto this tile to enable crafting</Text>;
         } else {
@@ -347,7 +351,7 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
                             isWaitingToCraft={isWaitingToCraft}
                             craftFailed={craftFailed}
                             bagHasEmptySlot={bagHasEmptySlot(selectedSeeker.bags[0])}
-                            bagHasSufficientIngredients={bagHasSufficientIngredients(selectedSeeker.bags[0])}
+                            bagHasSufficientIngredients={bagHasSufficientResources(selectedSeeker.bags[0])}
                         />
                     )}
                 </main>
