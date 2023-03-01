@@ -7,6 +7,7 @@ import { Button, Flex, List, ListItem, Alert, AlertIcon } from '@chakra-ui/react
 
 export interface CraftingProps extends ComponentProps {
     recipe: any;
+    selectedSeekerIsOnTile: boolean;
     bagHasEmptySlot: boolean;
     bagHasSufficientIngredients: boolean;
     isWaitingToCraft: boolean;
@@ -25,8 +26,17 @@ const StyledCrafting = styled('div')`
 `;
 
 export const Crafting: FunctionComponent<CraftingProps> = (props: CraftingProps) => {
-    const { isWaitingToCraft, craftFailed, bagHasEmptySlot, bagHasSufficientIngredients, onCraft, ...otherProps } =
-        props;
+    const {
+        isWaitingToCraft,
+        craftFailed,
+        bagHasEmptySlot,
+        bagHasSufficientIngredients,
+        selectedSeekerIsOnTile,
+        onCraft,
+        ...otherProps
+    } = props;
+
+    const canCraft = bagHasEmptySlot && bagHasSufficientIngredients && selectedSeekerIsOnTile;
 
     return (
         <StyledCrafting {...otherProps}>
@@ -40,14 +50,16 @@ export const Crafting: FunctionComponent<CraftingProps> = (props: CraftingProps)
                         </List>
                     </div>
                 </Flex>
-                <Button
-                    onClick={onCraft}
-                    isLoading={isWaitingToCraft}
-                    loadingText="Forging a hammer"
-                    isDisabled={!bagHasEmptySlot || !bagHasSufficientIngredients || isWaitingToCraft}
-                >
-                    Hammer time!
-                </Button>
+                {canCraft && (
+                    <Button
+                        onClick={onCraft}
+                        isLoading={isWaitingToCraft}
+                        loadingText="Forging a hammer"
+                        isDisabled={!bagHasEmptySlot || !bagHasSufficientIngredients || isWaitingToCraft}
+                    >
+                        Hammer time!
+                    </Button>
+                )}
 
                 {craftFailed && (
                     <Alert status="error">
@@ -65,6 +77,12 @@ export const Crafting: FunctionComponent<CraftingProps> = (props: CraftingProps)
                     <Alert status="warning">
                         <AlertIcon />
                         You need more resources to craft a hammer
+                    </Alert>
+                )}
+                {!selectedSeekerIsOnTile && (
+                    <Alert status="warning">
+                        <AlertIcon />
+                        Your seeker must be on the tile to craft a hammer
                     </Alert>
                 )}
             </Flex>

@@ -194,8 +194,14 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
         }
 
         // if we can create a new empty slot then do so
+        // we need to iterate over the slot indexes as the 'empty' slot will be a non existing not necessarily with a sequential index
         if (bag.slots.length < 4) {
-            return bag.slots.length;
+            for (let i = 0; i < 4; i++) {
+                const existingSlot = bag.slots.find((slot) => slot.slot === i);
+                if (!existingSlot) {
+                    return i;
+                }
+            }
         }
 
         // fail
@@ -266,6 +272,8 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
             console.error('plugin: no extension');
             return;
         }
+
+        setCraftFailed(false);
 
         const mainBagEquipIndex = 0;
         const recipeBagIndex = 1;
@@ -352,6 +360,7 @@ export const Plugin: FunctionComponent<PluginProps> = (props: PluginProps) => {
                             craftFailed={craftFailed}
                             bagHasEmptySlot={bagHasEmptySlot(selectedSeeker.bags[0])}
                             bagHasSufficientIngredients={bagHasSufficientResources(selectedSeeker.bags[0])}
+                            selectedSeekerIsOnTile={selectedSeekerIsOnTile}
                         />
                     )}
                 </main>
