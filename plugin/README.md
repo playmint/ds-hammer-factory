@@ -2,9 +2,9 @@
 
 # NextJS boilerplate
 
-| Maintainers    | Technologies                                    |
-| :------------- |:------------------------------------------------|
-| [@Chris-Baker] | React (Typescript / NextJS / Styled Components) |
+| Maintainers    | Technologies                          |
+| :------------- |:--------------------------------------|
+| [@Chris-Baker] | React (Typescript / NextJS / Emotion) |
 
 ## Structure
 

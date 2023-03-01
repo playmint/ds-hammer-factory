@@ -1,9 +1,9 @@
 /** @format */
 
 import { Fragment } from 'react';
-import { ChakraProvider } from '@chakra-ui/react';
+import { ChakraProvider, ThemeConfig } from '@chakra-ui/react';
 import Head from 'next/head';
-import { extendTheme, type ThemeConfig } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
 import { GlobalStyles } from '@app/styles/global.styles';
 import { CogPluginProvider } from '@app/contexts/cog-plugin-provider';
 import { COGSessionProvider } from '@app/contexts/cog-session-provider';
@@ -17,7 +17,30 @@ const client = new ApolloClient({
     cache: new InMemoryCache()
 });
 
-const actions = new ethers.utils.Interface([`function CHECK_IN(bytes24 seekerID, bytes24 buildingID)`]);
+const actions = new ethers.utils.Interface([
+    `function DEV_SPAWN_BAG(
+        uint64 bagID,
+        address owner,
+        bytes24 equipee,
+        uint8 equipSlot,
+        bytes24[] calldata slotContents,
+        uint64[] calldata slotBalances
+    )`,
+    `function TRANSFER_ITEM_SEEKER(
+        bytes24 seeker,
+        bytes24[2] calldata equipees,
+        uint8[2] calldata equipSlots,
+        uint8[2] calldata itemSlots,
+        uint64 qty
+    )`,
+    `function CRAFT_HAMMER(
+        bytes24 seekerID,
+        bytes24 buildingID,
+        uint64 inBag,
+        uint64 destBag,
+        uint8 destItemSlot
+    )`
+]);
 
 function App({ Component, pageProps }: any) {
     const config: ThemeConfig = {
@@ -34,7 +57,7 @@ function App({ Component, pageProps }: any) {
             </Head>
             <GlobalStyles />
             <ApolloProvider client={client}>
-                <CogPluginProvider>
+                <CogPluginProvider actions={actions}>
                     <Web3Provider>
                         <NetworkProvider>
                             <COGSessionProvider actions={actions}>

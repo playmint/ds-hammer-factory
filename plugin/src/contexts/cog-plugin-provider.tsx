@@ -51,9 +51,11 @@ export const CogPluginProvider = ({ children, actions }: CogPluginContextProvide
     const dispatchAction = (gameID: string, actionName: string, ...actionArgs: any) => {
         // todo handle being the top level window
         if (!window.top) return;
+        console.log('actions', actions);
+
         if (!actions) return;
 
-        // console.log(`CogPluginProvider.dispatch: gameID: ${gameID} actionName: ${actionName}`);
+        console.log(`CogPluginProvider.dispatch: gameID: ${gameID} actionName: ${actionName}`);
 
         const action = actions.encodeFunctionData(actionName, actionArgs);
 
@@ -64,7 +66,7 @@ export const CogPluginProvider = ({ children, actions }: CogPluginContextProvide
         // todo handle being the top level window
         if (!window.top) return;
 
-        // console.log(`CogPluginProvider.dispatchActionEncoded: action: ${action}`);
+        console.log(`CogPluginProvider.dispatchActionEncoded: action: ${action}`);
 
         // todo use the full url not just the path
         const url = window.location.pathname;

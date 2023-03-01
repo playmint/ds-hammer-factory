@@ -14,8 +14,4 @@ export const GlobalStyles = createGlobalStyle`
     i {
         color: inherit;
     }
-
-    body {
-        background: transparent !important;
-    }
 `;

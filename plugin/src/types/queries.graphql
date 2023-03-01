@@ -22,6 +22,14 @@ fragment stateFragment on State {
                 keys
             }
         }
+        bags: nodes(match: {kinds: ["Bag"], via: {rel: "Equip", dir: OUT}}) {
+            id
+            slots: edges(match: {kinds: ["Resource", "Item"], via: {rel: "Balance"}}) {
+                slot: key
+                balance: weight
+                resource: node{ id }
+            }
+        }
         owner: node(match: { kinds: ["Player"], via: [{ rel: "Owner" }] }) {
             addr: key
         }

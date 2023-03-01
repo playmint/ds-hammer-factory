@@ -105,6 +105,7 @@ export const COGSessionProvider = ({ children, actions }: SessionContextProvider
         const action = actions.encodeFunctionData(actionName, actionArgs);
         const actionDigest = ethers.utils.arrayify(ethers.utils.keccak256(action));
         const auth = await session.signMessage(actionDigest);
+        console.log('break me');
         return client.mutate({ mutation: DispatchDocument, variables: { gameID, auth, action } }).then((res) => {
             console.log('dispatched', actionName);
             return res.data.dispatch;
