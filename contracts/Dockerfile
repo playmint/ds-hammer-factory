@@ -21,6 +21,7 @@ COPY test ./test
 COPY foundry.toml ./
 COPY entrypoint.sh ./
 COPY init.sh ./
+COPY remappings.txt ./
 
 RUN forge build
 
