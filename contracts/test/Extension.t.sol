@@ -4,15 +4,12 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 
 import {Dispatcher} from "cog/Dispatcher.sol";
+import {State} from "cog/State.sol";
 import {Game} from "@ds/Game.sol";
 import {Actions} from "@ds/actions/Actions.sol";
-import {Node, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE} from "@ds/schema/Schema.sol";
-import {HammerFactory} from "extension/Extension.sol";
+import {Node, Rel, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE} from "@ds/schema/Schema.sol";
 import {BUILDING_COST} from "@ds/rules/BuildingRule.sol";
-
-uint64 constant HAMMER_WOOD_QTY = 20;
-uint64 constant HAMMER_IRON_QTY = 12;
-string constant HAMMER_NAME = "Hammer";
+import {HammerFactory, ExtensionActions, HAMMER_WOOD_QTY, HAMMER_IRON_QTY, HAMMER_NAME} from "extension/Extension.sol";
 
 uint32 constant PLAYER_SEEKER_ID = 1;
 uint32 constant BUILDER_SEEKER_ID = 2;
@@ -27,6 +24,7 @@ contract HammerFactoryTest is Test {
     HammerFactory internal ext;
     Game internal ds;
     Dispatcher internal dispatcher;
+    State internal state;
 
     bytes24 buildingInstance;
 
@@ -41,7 +39,7 @@ contract HammerFactoryTest is Test {
     function setUp() public {
         // setup dawnseekers
         ds = new Game();
-        // state = ds.getState();
+        state = ds.getState();
         dispatcher = ds.getDispatcher();
 
         ext = new HammerFactory(); // As the tets call `use()` directly I'm caching a ref to the extension
@@ -85,13 +83,46 @@ contract HammerFactoryTest is Test {
         vm.stopPrank();
     }
 
-    function testUseFunction() public {
-        // bytes memory payload = new bytes(0);
-        // ext.use(ds, buildingInstance, aliceSeeker, payload);
+    // function testItemRegistered() public {
+    //     uint64[] memory numAtoms = DSUtils.getAtoms(dsState, hammerID);
 
-        bytes memory payload = bytes("CUSTOM_PAYLOAD");
+    //     assertGt(numAtoms[uint8(DSAtomKind.LIFE)], 0, "Expected LIFE atoms to be greater than 0");
+    //     assertGt(numAtoms[uint8(DSAtomKind.ATK)], 0, "Expected ATK atoms to be greater than 0");
+    // }
+
+    function testBuildingUse() public {
+        uint64 destBagID = 1;
+        bytes24 destBag = _spawnBagEmpty(destBagID, aliceAccount, aliceSeeker, 0);
+        uint64 inBagID = 2;
+        _spawnBagWithResources(
+            inBagID,
+            aliceAccount,
+            aliceSeeker,
+            1, // equip slot 1
+            [HAMMER_WOOD_QTY, 0, HAMMER_IRON_QTY]
+        );
+
+        bytes memory payload = abi.encodeCall(
+            ExtensionActions.CRAFT_HAMMER,
+            (
+                aliceSeeker,
+                buildingInstance,
+                inBagID,
+                destBagID,
+                0 // destination slot
+            )
+        );
+
+        // act as the player "alice"
         vm.startPrank(aliceAccount);
         dispatcher.dispatch(abi.encodeCall(Actions.BUILDING_USE, (buildingInstance, aliceSeeker, payload)));
+
+        // check that the "balance" relationship exists between seeker's Bag --> Item
+        (bytes24 itemID, uint64 bal) = state.get(Rel.Balance.selector, 0, destBag);
+        assertEq(itemID, hammerID, "Expected item at slot 0 to be hammer");
+        assertEq(bal, 1, "Expected hammer item to have a balance of 1");
+
+        // stop acting as alice
         vm.stopPrank();
     }
 
@@ -163,6 +194,28 @@ contract HammerFactoryTest is Test {
         return _spawnBag(bagID, owner, equipNode, equipSlot, items, balances);
     }
 
+    function _spawnBagWithResources(
+        uint64 bagID,
+        address owner,
+        bytes24 equipNode,
+        uint8 equipSlot,
+        uint64[3] memory resourceQty
+    ) private returns (bytes24) {
+        bytes24[] memory items = new bytes24[](3);
+        uint64[] memory balances = new uint64[](3);
+
+        uint8 slotId = 0;
+        for (uint8 i = 0; i < 3; i++) {
+            if (resourceQty[i] > 0) {
+                items[slotId] = Node.Resource(ResourceKind(i + 1));
+                balances[slotId] = resourceQty[i];
+                slotId++;
+            }
+        }
+
+        return _spawnBag(bagID, owner, equipNode, equipSlot, items, balances);
+    }
+
     function _spawnBag(
         uint64 bagID,
         address owner,
@@ -173,5 +226,14 @@ contract HammerFactoryTest is Test {
     ) private returns (bytes24) {
         dispatcher.dispatch(abi.encodeCall(Actions.DEV_SPAWN_BAG, (bagID, owner, equipNode, equipSlot, resources, qty)));
         return Node.Bag(bagID);
+    }
+
+    function _spawnBagEmpty(uint64 bagID, address owner, bytes24 equipNode, uint8 equipSlot)
+        private
+        returns (bytes24)
+    {
+        bytes24[] memory items = new bytes24[](0);
+        uint64[] memory balances = new uint64[](0);
+        return _spawnBag(bagID, owner, equipNode, equipSlot, items, balances);
     }
 }
