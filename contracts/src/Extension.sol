@@ -2,37 +2,39 @@
 pragma solidity ^0.8.13;
 
 import {Game} from "cog/Game.sol";
-// import {Node, ResourceKind, AtomKind} from "@ds/schema/Schema.sol";
+import {Node, ResourceKind, AtomKind} from "@ds/schema/Schema.sol";
 import {Actions} from "@ds/actions/Actions.sol";
 import {BuildingKind} from "@ds/ext/BuildingKind.sol";
 import {console} from "forge-std/console.sol";
 
 contract HammerFactory is BuildingKind {
-    // function onRegister(Game ds) public {
-    //     // Get hammer ID
+    error SeekerMustBeLocatedAtBuilding();
 
-    //     // Need to know item recipe to get the ID for the item
-    //     bytes24[4] memory inputItems;
-    //     uint64[4] memory inputQty;
-    //     inputItems[0] = Node.Resource(DSResourceKind.WOOD);
-    //     inputQty[0] = HAMMER_WOOD_QTY;
-    //     inputItems[1] = Node.Resource(DSResourceKind.IRON);
-    //     inputQty[1] = HAMMER_IRON_QTY;
-    //     bool stackable = false;
+    uint64 constant HAMMER_WOOD_QTY = 20;
+    uint64 constant HAMMER_IRON_QTY = 12;
+    string constant HAMMER_NAME = "Hammer";
 
-    //     hammerID = Node.Item(inputItems, inputQty, stackable, HAMMER_NAME);
-    // }
+    bytes24 public hammerID;
+
+    function onRegister(Game ds) public {
+        // Get hammer ID
+
+        // Need to know item recipe to get the ID for the item
+        bytes24[4] memory inputItems;
+        uint64[4] memory inputQty;
+        inputItems[0] = Node.Resource(ResourceKind.WOOD);
+        inputQty[0] = HAMMER_WOOD_QTY;
+        inputItems[1] = Node.Resource(ResourceKind.IRON);
+        inputQty[1] = HAMMER_IRON_QTY;
+        bool stackable = false;
+
+        hammerID = Node.Item(inputItems, inputQty, stackable, HAMMER_NAME);
+    }
 
     function use(Game ds, bytes24 buildingInstance, bytes24 seeker, bytes memory payload) public {
         console.log("HammerFactory::use()");
     }
 }
-
-// error SeekerMustBeLocatedAtBuilding();
-
-// uint64 constant HAMMER_WOOD_QTY = 20;
-// uint64 constant HAMMER_IRON_QTY = 12;
-// string constant HAMMER_NAME = "Hammer";
 
 // // define an action that seekers can perform at our building
 

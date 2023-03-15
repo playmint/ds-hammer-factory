@@ -36,6 +36,8 @@ contract HammerFactoryTest is Test {
     address aliceAccount;
     bytes24 aliceSeeker;
 
+    bytes24 hammerID;
+
     function setUp() public {
         // setup dawnseekers
         ds = new Game();
@@ -53,14 +55,21 @@ contract HammerFactoryTest is Test {
         dispatcher.dispatch(
             abi.encodeCall(Actions.REGISTER_BUILDING_PLUGIN, (hammerFactoryKind, Node.ClientPlugin(1), "{}"))
         );
-        // PROBLEM:
-        // There is no init for a building so how do I register an item type?
+        // PROBLEM: There is no init for a building so how do I register an item type? I'll manually call it for now
+        ext.onRegister(ds);
+        hammerID = ext.hammerID();
+        assertGt(uint192(hammerID), 0, "Bytes expected to be the hammer ID");
+
+        // discover an adjacent tile for our building site
+        (int16 q, int16 r, int16 s) = (1, -1, 0);
+        _discover(q, r, s);
 
         // -- Setup users
 
         uint256 alicePrivateKey = 0xA11CE;
         aliceAccount = vm.addr(alicePrivateKey);
-        aliceSeeker = _spawnSeeker(aliceAccount, PLAYER_SEEKER_ID, 0, 0, 0);
+        // Spawn alice's seeker on the tile on which the building will be constructed
+        aliceSeeker = _spawnSeeker(aliceAccount, PLAYER_SEEKER_ID, q, r, s);
 
         uint256 bobPrivateKey = 0xB0B;
         bobAccount = vm.addr(bobPrivateKey);
@@ -68,30 +77,25 @@ contract HammerFactoryTest is Test {
         // equip the seeker with a bag with enough wood
         _spawnBagWithWood(1, bobAccount, bobSeeker, EQUIP_SLOT_0, BUILDING_COST);
 
-        // -- Construct the building
+        // -- Construct the building with bob the builder
 
-        // discover an adjacent tile for our building site
-        (int16 q, int16 r, int16 s) = (1, -1, 0);
-        _discover(q, r, s);
-
-        // construct with bob the builder
         vm.startPrank(bobAccount);
         buildingInstance = _constructBuilding(bobSeeker, hammerFactoryKind, q, r, s);
+        assertGt(uint192(buildingInstance), 0, "Bytes expected to be the building instance");
         vm.stopPrank();
-
-        // Get hammer ID
-
-        // Need to know item recipe to get the ID for the item
-        // bytes24[4] memory inputItems;
-        // uint64[4] memory inputQty;
-        // inputItems[0] = Node.Resource(DSResourceKind.WOOD);
-        // inputQty[0] = HAMMER_WOOD_QTY;
-        // inputItems[1] = Node.Resource(DSResourceKind.IRON);
-        // inputQty[1] = HAMMER_IRON_QTY;
-        // bool stackable = false;
-
-        // hammerID = Node.Item(inputItems, inputQty, stackable, HAMMER_NAME);
     }
+
+    function testUseFunction() public {
+        // bytes memory payload = new bytes(0);
+        // ext.use(ds, buildingInstance, aliceSeeker, payload);
+
+        bytes memory payload = bytes("CUSTOM_PAYLOAD");
+        vm.startPrank(aliceAccount);
+        dispatcher.dispatch(abi.encodeCall(Actions.BUILDING_USE, (buildingInstance, aliceSeeker, payload)));
+        vm.stopPrank();
+    }
+
+    // -- Helper functions
 
     function _constructBuilding(bytes24 seeker, bytes24 buildingKind, int16 q, int16 r, int16 s)
         private
@@ -116,13 +120,6 @@ contract HammerFactoryTest is Test {
         // make full building id
         _buildingInstance = Node.Building(DEFAULT_ZONE, q, r, s);
     }
-
-    function testUseFunction() public {
-        bytes memory payload = new bytes(0);
-        ext.use(ds, buildingInstance, aliceSeeker, payload);
-    }
-
-    // -- Helper functions
 
     function _spawnSeeker(address owner, uint32 sid, int16 q, int16 r, int16 s) private returns (bytes24) {
         _discover(q, r, s); // discover the tile we place seeker on
