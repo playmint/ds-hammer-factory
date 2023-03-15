@@ -7,6 +7,7 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {BuildingKind} from "@ds/ext/BuildingKind.sol";
 import {console} from "forge-std/console.sol";
 
+uint8 constant MAX_CRAFT_INPUT_ITEMS = 4; // TODO: move this into crafting rule
 uint64 constant HAMMER_WOOD_QTY = 20;
 uint64 constant HAMMER_IRON_QTY = 12;
 string constant HAMMER_NAME = "Hammer";
@@ -23,18 +24,20 @@ contract HammerFactory is BuildingKind {
     bytes24 public hammerID;
 
     function onRegister(Game ds) public {
-        // Get hammer ID
+        // -- Register the Hammer as an Item
+        bytes24[MAX_CRAFT_INPUT_ITEMS] memory inputItems;
+        uint64[MAX_CRAFT_INPUT_ITEMS] memory inputQty;
 
-        // Need to know item recipe to get the ID for the item
-        bytes24[4] memory inputItems;
-        uint64[4] memory inputQty;
+        // Recipe
         inputItems[0] = Node.Resource(ResourceKind.WOOD);
         inputQty[0] = HAMMER_WOOD_QTY;
         inputItems[1] = Node.Resource(ResourceKind.IRON);
         inputQty[1] = HAMMER_IRON_QTY;
-        bool stackable = false;
 
-        hammerID = Node.Item(inputItems, inputQty, stackable, HAMMER_NAME);
+        // Boolean is the 'stackable' flag
+        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, false, HAMMER_NAME)));
+
+        hammerID = Node.Item(inputItems, inputQty, false, HAMMER_NAME);
     }
 
     function use(Game ds, bytes24, /*buildingInstance*/ bytes24, /*seeker*/ bytes calldata payload) public {

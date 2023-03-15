@@ -7,7 +7,7 @@ import {Dispatcher} from "cog/Dispatcher.sol";
 import {State} from "cog/State.sol";
 import {Game} from "@ds/Game.sol";
 import {Actions} from "@ds/actions/Actions.sol";
-import {Node, Rel, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE} from "@ds/schema/Schema.sol";
+import {Node, Rel, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE, Schema} from "@ds/schema/Schema.sol";
 import {BUILDING_COST} from "@ds/rules/BuildingRule.sol";
 import {HammerFactory, ExtensionActions, HAMMER_WOOD_QTY, HAMMER_IRON_QTY, HAMMER_NAME} from "extension/Extension.sol";
 
@@ -53,8 +53,8 @@ contract HammerFactoryTest is Test {
         dispatcher.dispatch(
             abi.encodeCall(Actions.REGISTER_BUILDING_PLUGIN, (hammerFactoryKind, Node.ClientPlugin(1), "{}"))
         );
-        // PROBLEM: There is no init for a building so how do I register an item type? I'll manually call it for now
         ext.onRegister(ds);
+
         hammerID = ext.hammerID();
         assertGt(uint192(hammerID), 0, "Bytes expected to be the hammer ID");
 
@@ -83,12 +83,12 @@ contract HammerFactoryTest is Test {
         vm.stopPrank();
     }
 
-    // function testItemRegistered() public {
-    //     uint64[] memory numAtoms = DSUtils.getAtoms(dsState, hammerID);
+    function testItemRegistered() public {
+        uint64[] memory numAtoms = Schema.getAtoms(state, hammerID);
 
-    //     assertGt(numAtoms[uint8(DSAtomKind.LIFE)], 0, "Expected LIFE atoms to be greater than 0");
-    //     assertGt(numAtoms[uint8(DSAtomKind.ATK)], 0, "Expected ATK atoms to be greater than 0");
-    // }
+        assertGt(numAtoms[uint8(AtomKind.LIFE)], 0, "Expected LIFE atoms to be greater than 0");
+        assertGt(numAtoms[uint8(AtomKind.ATK)], 0, "Expected ATK atoms to be greater than 0");
+    }
 
     function testBuildingUse() public {
         uint64 destBagID = 1;
