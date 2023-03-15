@@ -2,9 +2,6 @@
 	path = contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 	branch = v1.3.0
-[submodule "contracts/lib/ds-contracts"]
-	path = contracts/lib/ds-contracts
-	url = https://github.com/playmint/ds-contracts
 [submodule "contracts/lib/cog"]
 	path = contracts/lib/cog
 	url = https://github.com/playmint/cog

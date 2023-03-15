@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {CompoundKeyKind, WeightKind, State} from "cog/State.sol";
-import {SessionRouter} from "cog/SessionRouter.sol";
-import {BaseDispatcher, Rule, Context} from "cog/Dispatcher.sol";
-import {StateGraph} from "cog/StateGraph.sol";
-import {Game, BaseGame} from "cog/Game.sol";
+import {Game} from "cog/Game.sol";
+import {Actions} from "@ds/actions/Actions.sol";
+import {BuildingKind} from "@ds/ext/BuildingKind.sol";
 
-import {
-    Schema as DSUtils,
-    Kind as DSKind,
-    ResourceKind as DSResourceKind,
-    Node as DSNode
-} from "ds-contracts/schema/Schema.sol";
-import {Actions as DSActions} from "ds-contracts/actions/Actions.sol";
+contract DummyBuilding is BuildingKind {
+    function use(Game, /*ds*/ bytes24, /*buildingInstance*/ bytes24, /*seeker*/ bytes memory /*payload*/ ) public {
+        // do something
+    }
+}
 
 import {console} from "forge-std/console.sol";
 
