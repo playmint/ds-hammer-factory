@@ -102,11 +102,10 @@ contract HammerFactoryTest is Test {
             [HAMMER_WOOD_QTY, 0, HAMMER_IRON_QTY]
         );
 
+        // TODO: Currently anyone can craft from anyone else bag! CraftingRule to check that inBag is owned by Alice
         bytes memory payload = abi.encodeCall(
             ExtensionActions.CRAFT_HAMMER,
             (
-                aliceSeeker,
-                buildingInstance,
                 inBagID,
                 destBagID,
                 0 // destination slot

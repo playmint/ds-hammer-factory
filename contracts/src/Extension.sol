@@ -13,8 +13,6 @@ string constant HAMMER_NAME = "Hammer";
 
 interface ExtensionActions {
     function CRAFT_HAMMER(
-        bytes24 seekerID,
-        bytes24 buildingID,
         uint64 inBag,
         uint64 destBag,
         uint8 destItemSlot // empty slot
@@ -39,14 +37,13 @@ contract HammerFactory is BuildingKind {
         hammerID = Node.Item(inputItems, inputQty, stackable, HAMMER_NAME);
     }
 
-    function use(Game ds, bytes24, /*buildingInstance*/ bytes24 seeker, bytes memory payload) public {
+    function use(Game ds, bytes24, /*buildingInstance*/ bytes24, /*seeker*/ bytes calldata payload) public {
         console.log("HammerFactory::use()");
         if (bytes4(payload) == ExtensionActions.CRAFT_HAMMER.selector) {
             console.log("HammerFactory::use(): ExtensionActions.CRAFT_HAMMER");
 
             // decode extension action
-            (bytes24 seekerID, bytes24 buildingID, uint64 inBag, uint64 destBag, uint8 destItemSlot) =
-                abi.decode(payload[4:], (bytes24, bytes24, uint64, uint64, uint8));
+            (uint64 inBag, uint64 destBag, uint8 destItemSlot) = abi.decode(payload[4:], (uint64, uint64, uint8));
 
             // console.log("inBag: ", _toHexString(uint192(inBag), 24));
             // console.log("destBag: ", _toHexString(uint192(destBag), 24));
