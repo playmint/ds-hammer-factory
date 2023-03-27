@@ -1,33 +1,38 @@
-# Dawnseekers Building Extension Starter
-
-## Overview
-
-An example/starter repository to fork and get started developing a Building Extension and client plugin for Dawnseekers.
+# A Factory That Makes Hammers (in Dawnseekers)
 
 ## Getting started
 
-* Install [Docker](https://docs.docker.com/get-docker/)
-* clone this repository with submodules: `git clone --recursive https://github.com/playmint/ds-example-building-extension.git`
-* run `docker compose up --build` from your cloned repository folder
-* ... will take a minuite or so to provision the game's services, then you should be able to use a browser to visit:
-    * [http://localhost:3000](http://localhost:3000) to see the game's UI
-    * [http://localhost:8080](http://localhost:8080) to see graphQL query playground
-    
-## Example of how to fork and make changes to the repository
-* Install [Docker](https://docs.docker.com/get-docker/)
-* Fork this repository
-* In /contracts/src/Game.sol on line 81, change the name of the building from "MyDawnseekersExtension" to "Hello World"
-* From the root of the repository, run 'docker compose up --build'
-* ... will take a minuite or so to provision the game's services, then you should be able to use a browser to visit:
-    * [http://localhost:3000](http://localhost:3000) to see the game's UI
-* Collect enough resources to construct a building
-* You will notice that you will be given the option to build the "Hello World" building
+This is a forge project, ([install foundry](https://book.getfoundry.sh/getting-started/installation))
 
-
-## Cleaning up
-
-To delete the provisioned services:
+Once you have foundry, you should be able to run the tests:
 
 ```
-docker compose down -v --rmi=all -t 1 --remove-orphans
+forge test
+```
+
+inside the `src` dir you will find two files:
+
+* HammerFactory.sol - this is a BuildingKind Extension, Players can call your `use` function by visiting instances of the BuildingKind on the map
+* HammerFactory.js - this is a client plugin that will be loaded when Players visit instance of the BuildingKind, use it to show UI for calling the `use` function
+
+## How to deploy
+
+Find the address of the game contract....
+
+Visit http://localhost:8080/ and execute this query:
+
+```
+query {
+  game(id: "DAWNSEEKERS") {
+    id
+  }
+}
+```
+
+The returned `id` is the game address.
+
+Deploy the BuildingKind extension and plugin, substituting the correct game id you found above:
+
+```
+GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy.sol --broadcast --verify --rpc-url "http://localhost:8545"
 ```
