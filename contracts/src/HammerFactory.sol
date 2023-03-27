@@ -23,7 +23,7 @@ interface ExtensionActions {
 contract HammerFactory is BuildingKind {
     bytes24 public hammerID;
 
-    function onRegister(Game ds) public {
+    constructor(Game ds) {
         // -- Register the Hammer as an Item
         bytes24[MAX_CRAFT_INPUT_ITEMS] memory inputItems;
         uint64[MAX_CRAFT_INPUT_ITEMS] memory inputQty;

@@ -9,7 +9,9 @@ import {Game} from "@ds/Game.sol";
 import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Rel, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE, Schema} from "@ds/schema/Schema.sol";
 import {BUILDING_COST} from "@ds/rules/BuildingRule.sol";
-import {HammerFactory, ExtensionActions, HAMMER_WOOD_QTY, HAMMER_IRON_QTY, HAMMER_NAME} from "extension/Extension.sol";
+import {
+    HammerFactory, ExtensionActions, HAMMER_WOOD_QTY, HAMMER_IRON_QTY, HAMMER_NAME
+} from "../src/HammerFactory.sol";
 
 uint32 constant PLAYER_SEEKER_ID = 1;
 uint32 constant BUILDER_SEEKER_ID = 2;
@@ -19,6 +21,10 @@ uint8 constant EQUIP_SLOT_1 = 1;
 
 uint8 constant ITEM_SLOT_0 = 0;
 uint8 constant ITEM_SLOT_1 = 1;
+
+// randomly chosen id for our building kind and plugin ids
+uint64 constant BUILDING_KIND_EXTENSION_ID = 45342312;
+uint64 constant BUILDING_KIND_PLUGIN_ID = 45342312;
 
 contract HammerFactoryTest is Test {
     HammerFactory internal ext;
@@ -42,18 +48,26 @@ contract HammerFactoryTest is Test {
         state = ds.getState();
         dispatcher = ds.getDispatcher();
 
-        ext = new HammerFactory(); // As the tets call `use()` directly I'm caching a ref to the extension
+        // As the tets call `use()` directly I'm caching a ref to the extension
+        ext = new HammerFactory(ds);
 
         // deploy and register the HammerFactory as a building kind
-        bytes24 hammerFactoryKind = Node.BuildingKind(2);
+        bytes24 hammerFactoryKind = Node.BuildingKind(BUILDING_KIND_EXTENSION_ID);
         // vm.expectEmit(true, true, true, true, address(state));
         // emit AnnotationSet(hammerFactoryKind, AnnotationKind.CALLDATA, "name", keccak256(bytes(buildingName)), buildingName);
         dispatcher.dispatch(abi.encodeCall(Actions.REGISTER_BUILDING_KIND, (hammerFactoryKind, "hammerFactory")));
         dispatcher.dispatch(abi.encodeCall(Actions.REGISTER_BUILDING_CONTRACT, (hammerFactoryKind, address(ext))));
         dispatcher.dispatch(
-            abi.encodeCall(Actions.REGISTER_BUILDING_PLUGIN, (hammerFactoryKind, Node.ClientPlugin(1), "{}"))
+            abi.encodeCall(
+                Actions.REGISTER_CLIENT_PLUGIN,
+                (
+                    Node.ClientPlugin(BUILDING_KIND_PLUGIN_ID),
+                    hammerFactoryKind,
+                    "my-hammer-factory-plugin",
+                    "export default function update(){}"
+                )
+            )
         );
-        ext.onRegister(ds);
 
         hammerID = ext.hammerID();
         assertGt(uint192(hammerID), 0, "Bytes expected to be the hammer ID");

@@ -2,5 +2,3 @@ cog/=lib/cog/contracts/src/
 @ds/=lib/ds/contracts/src/
 ds-test/=lib/forge-std/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
-solmate/=lib/ds-contracts/lib/solmate/src/
-extension/=src
