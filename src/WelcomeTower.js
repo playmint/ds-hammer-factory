@@ -15,7 +15,7 @@ export default function update({ selected }) {
             {
                 type: 'building',
                 id: 'welcome-tower',
-                title: 'Welcome Tower',
+                title: 'Welcome To DawnSeekers',
                 summary: 'Go create! Go have fun! Let us know if something goes horribly horribly wrong.',
                 content: [
                     {
