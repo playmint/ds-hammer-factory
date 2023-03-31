@@ -6,7 +6,7 @@ import {Game} from "@ds/Game.sol";
 import {Dispatcher} from "cog/Dispatcher.sol";
 import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Schema, State} from "@ds/schema/Schema.sol";
-import {HammerFactory} from "../src/HammerFactory.sol";
+import {WelcomeTower} from "../src/WelcomeTower.sol";
 
 using Schema for State;
 
@@ -39,7 +39,7 @@ contract Deployer is Script {
 
         // BUILDING_KIND_NAME sets the name of the building kind that can be seen in the game UI
         // Pick something unique.
-        string memory defaultBuildingKindName = "Hammer Factory";
+        string memory defaultBuildingKindName = "Welcome Tower";
         string memory buildingKindName = vm.envOr("BUILDING_KIND_NAME", defaultBuildingKindName);
 
         // BUILDING_KIND_EXTENSION_ID is the unique identifier for your building
@@ -54,7 +54,7 @@ contract Deployer is Script {
         // When deploying to local testnet instances of the game (localhost)
         // you can probably leave this as the default of 45342312 as you are
         // unlikely to clash with yourself
-        uint64 buildingKindExtensionID = uint64(vm.envOr("BUILDING_KIND_EXTENSION_ID", uint64(45342312)));
+        uint64 buildingKindExtensionID = uint64(vm.envOr("BUILDING_KIND_EXTENSION_ID", uint64(5437234722)));
         bytes24 buildingKind = Node.BuildingKind(buildingKindExtensionID);
 
         // BUILDING_KIND_PLUGIN_ID is the unique identifier for your building kind's frontend plugin
@@ -77,13 +77,13 @@ contract Deployer is Script {
         }
 
         // deploy the extension contract and set as implementation of building kind...
-        HammerFactory extensionContract = new HammerFactory(ds);
+        WelcomeTower extensionContract = new WelcomeTower(ds);
         dispatcher.dispatch(
             abi.encodeCall(Actions.REGISTER_BUILDING_CONTRACT, (buildingKind, address(extensionContract)))
         );
 
         // deploy and register the BuildingKind client plugin...
-        string memory clientPluginSrc = vm.readFile("src/HammerFactory.js");
+        string memory clientPluginSrc = vm.readFile("src/WelcomeTower.js");
         dispatcher.dispatch(
             abi.encodeCall(
                 Actions.REGISTER_CLIENT_PLUGIN, (clientPlugin, buildingKind, buildingKindName, clientPluginSrc)

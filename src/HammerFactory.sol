@@ -7,13 +7,32 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {BuildingKind} from "@ds/ext/BuildingKind.sol";
 import {console} from "forge-std/console.sol";
 
+
 uint8 constant MAX_CRAFT_INPUT_ITEMS = 4; // TODO: move this into crafting rule
-uint64 constant HAMMER_WOOD_QTY = 20;
-uint64 constant HAMMER_IRON_QTY = 12;
-string constant HAMMER_NAME = "Hammer";
+
+//CHANGE THESE
+
+string constant ITEM_NAME = "Hammer";
+
+ResourceKind constant INGREDIENT_0_TYPE = ResourceKind.WOOD;
+uint64 constant INGREDIENT_0_QUANTITY = 5;
+
+ResourceKind constant INGREDIENT_1_TYPE = ResourceKind.IRON;
+uint64 constant INGREDIENT_1_QUANTITY = 6;
+
+ResourceKind constant INGREDIENT_2_TYPE = ResourceKind.IRON;
+uint64 constant INGREDIENT_2_QUANTITY = 0;
+
+ResourceKind constant INGREDIENT_3_TYPE = ResourceKind.IRON;
+uint64 constant INGREDIENT_3_QUANTITY = 0;
+
+//
+
+
+
 
 interface ExtensionActions {
-    function CRAFT_HAMMER(
+    function CRAFT_FUNCTION(
         uint64 inBag,
         uint64 destBag,
         uint8 destItemSlot // empty slot
@@ -21,29 +40,46 @@ interface ExtensionActions {
 }
 
 contract HammerFactory is BuildingKind {
-    bytes24 public hammerID;
+    bytes24 public itemID;
 
     constructor(Game ds) {
-        // -- Register the Hammer as an Item
+        // -- Register the Item
         bytes24[MAX_CRAFT_INPUT_ITEMS] memory inputItems;
         uint64[MAX_CRAFT_INPUT_ITEMS] memory inputQty;
 
-        // Recipe
-        inputItems[0] = Node.Resource(ResourceKind.WOOD);
-        inputQty[0] = HAMMER_WOOD_QTY;
-        inputItems[1] = Node.Resource(ResourceKind.IRON);
-        inputQty[1] = HAMMER_IRON_QTY;
+        if (INGREDIENT_0_QUANTITY > 0)
+        {
+            inputItems[0] = Node.Resource(INGREDIENT_0_TYPE);
+            inputQty[0] = INGREDIENT_0_QUANTITY;
+        }
+        if (INGREDIENT_1_QUANTITY > 0)
+        {
+            inputItems[1] = Node.Resource(INGREDIENT_1_TYPE);
+            inputQty[1] = INGREDIENT_1_QUANTITY;
+        }
+        if (INGREDIENT_2_QUANTITY > 0)
+        {
+            inputItems[2] = Node.Resource(INGREDIENT_2_TYPE);
+            inputQty[2] = INGREDIENT_2_QUANTITY;
+        }
+        if (INGREDIENT_3_QUANTITY > 0)
+        {
+            inputItems[3] = Node.Resource(INGREDIENT_3_TYPE);
+            inputQty[3] = INGREDIENT_3_QUANTITY;
+        }
+        
 
         // Boolean is the 'stackable' flag
-        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, false, HAMMER_NAME)));
+        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, false, ITEM_NAME)));
 
-        hammerID = Node.Item(inputItems, inputQty, false, HAMMER_NAME);
+        itemID = Node.Item(inputItems, inputQty, false, ITEM_NAME);
     }
+
 
     function use(Game ds, bytes24, /*buildingInstance*/ bytes24, /*seeker*/ bytes calldata payload) public {
         console.log("HammerFactory::use()");
-        if (bytes4(payload) == ExtensionActions.CRAFT_HAMMER.selector) {
-            console.log("HammerFactory::use(): ExtensionActions.CRAFT_HAMMER");
+        if (bytes4(payload) == ExtensionActions.CRAFT_FUNCTION.selector) {
+            console.log("HammerFactory::use(): ExtensionActions.CRAFT_FUNCTION");
 
             // decode extension action
             (uint64 inBag, uint64 destBag, uint8 destItemSlot) = abi.decode(payload[4:], (uint64, uint64, uint8));
@@ -52,7 +88,7 @@ contract HammerFactory is BuildingKind {
             // console.log("destBag: ", _toHexString(uint192(destBag), 24));
 
             ds.getDispatcher().dispatch(
-                abi.encodeCall(Actions.CRAFT_EQUIPABLE, (Node.Bag(inBag), hammerID, Node.Bag(destBag), destItemSlot))
+                abi.encodeCall(Actions.CRAFT_EQUIPABLE, (Node.Bag(inBag), itemID, Node.Bag(destBag), destItemSlot))
             );
         }
     }

@@ -53,7 +53,7 @@ export default function update({ selected }) {
             {
                 name: 'BUILDING_USE',
                 args: [selectedBuilding.id, selectedSeeker.id, ds.encodeCall(
-                    'function CRAFT_HAMMER(uint64, uint64, uint8)',
+                    'function CRAFT_FUNCTION(uint64, uint64, uint8)',
                     [selectedBuilding.bags[0].bag.key, selectedSeeker.bags[0].bag.key, 2]
                 )]
             },
