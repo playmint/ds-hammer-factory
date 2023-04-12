@@ -48,7 +48,6 @@ export default function update({ selected }) {
                 if (slotToGiveTo < 0 && selectedSeeker.bags[0].bag.slots[i].balance === 2) {
                     slotToGiveTo = i;
                 }
-                break;
             }
             else if (slotToGiveTo < 0 && selectedSeeker.bags[0].bag.slots[i].balance === 0) {
                 slotToGiveTo = i;
