@@ -12,6 +12,7 @@ uint8 constant MAX_CRAFT_INPUT_ITEMS = 4; // TODO: move this into crafting rule
 
 
 string constant ITEM_NAME = "Paper";
+bool constant IS_STACKABLE = true; //Also change Actions.CRAFT_STACKABLE to Actions.CRAFT_EQUIPABLE
 
 
 
@@ -37,9 +38,9 @@ contract PaperFactoryV2 is BuildingKind {
 
 
         // Boolean is the 'stackable' flag
-        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, true, ITEM_NAME)));
+        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, IS_STACKABLE, ITEM_NAME)));
 
-        itemID = Node.Item(inputItems, inputQty, true, ITEM_NAME);
+        itemID = Node.Item(inputItems, inputQty, IS_STACKABLE, ITEM_NAME);
     }
 
 

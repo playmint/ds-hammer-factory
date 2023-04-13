@@ -7,11 +7,10 @@ export default function update({ selected }) {
     const selectedBuilding = selectedTile && selectedTile.building ? selectedTile.building : undefined;
     const selectedSeeker = seeker;
 
-    // TODO: stop assuming the things to xfer are in seeker's bag[0].slot[0/1], allow player to select where to xfer from
-    // TODO: stop assuming bag[0].slot[2] is empty, find an empty one or allow selecting
-    // TODO: validate that the player has enough resources to pay
+
     // TODO: validate that the player is actually at the location before showing craft button
     // TODO:
+
     const craft = () => {
         if (!selectedSeeker) {
             ds.log('no selected seeker');
@@ -21,50 +20,79 @@ export default function update({ selected }) {
             ds.log('no selected building');
             return;
         }
-        if (!selectedSeeker.bags[0] || !selectedBuilding.bags[0].bag) {
-            ds.log('no source bag found');
+        if (!selectedSeeker.bags) {
+            ds.log('Seeker has no bags');
             return;
         }
-        if (!selectedBuilding.bags[0] || !selectedBuilding.bags[0].bag) {
-            ds.log('no target bag found');
-            return;
-        }
-        if (!selectedSeeker.bags[0].bag.slots) {
-            ds.log('no items in Seekers first bag');
-            return;
+        if (!selectedBuilding.bags[0].bag) {
+            ds.log('Building has no bag available to craft');
         }
 
-        //ds.log(JSON.stringify(selectedSeeker.bags[0].bag));   //Helpful for debugging
 
+        ds.log(JSON.stringify(selectedSeeker.bags[0].bag));   //Helpful for debugging
+        ds.log(JSON.stringify(selectedSeeker.bags[1].bag));   //Helpful for debugging
+
+
+        var bagToTakeFrom = -1;
         var slotToTakeFrom = -1;
+
+        var bagToGiveTo = -1;
         var slotToGiveTo = -1;
 
-        for (var i = 0; i < selectedSeeker.bags[0].bag.slots.length; i++) {
 
-            if (selectedSeeker.bags[0].bag.slots[i].item && selectedSeeker.bags[0].bag.slots[i].item.id === '0x37f9b55d0000000000000000000000000000000000000001' && selectedSeeker.bags[0].bag.slots[i].balance >= 2) {
+        for (var bagIndex = 0; bagIndex < selectedSeeker.bags.length; bagIndex++)
+        {
+            if (selectedSeeker.bags[bagIndex].bag.slots)
+            {
+                for (var slotIndex = 0; slotIndex < selectedSeeker.bags[bagIndex].bag.slots.length; slotIndex++)
+                {
+                    var thisSlot = selectedSeeker.bags[bagIndex].bag.slots[slotIndex];
 
-                slotToTakeFrom = i;
+                    if (bagToTakeFrom < 0 && thisSlot.item && thisSlot.item.id === '0x37f9b55d0000000000000000000000000000000000000001' && thisSlot.balance >= 2)
+                    {
+                        bagToTakeFrom = bagIndex;
+                        slotToTakeFrom = slotIndex;
 
-                if (slotToGiveTo < 0 && selectedSeeker.bags[0].bag.slots[i].balance === 2) {
-                    slotToGiveTo = i;
+                        if (bagToGiveTo < 0 && thisSlot.balance === 2)
+                        {
+                            bagToGiveTo = bagIndex;
+                            slotToGiveTo = slotIndex;
+                        }
+                    }
+
+                    if (bagToGiveTo < 0 && thisSlot.balance === 0)
+                    {
+                        bagToGiveTo = bagIndex;
+                        slotToGiveTo = slotIndex;
+                    }
                 }
-            }
-            else if (slotToGiveTo < 0 && selectedSeeker.bags[0].bag.slots[i].balance === 0) {
-                slotToGiveTo = i;
             }
         }
 
+        //Check to use an unused slot if needed
+        if (bagToGiveTo < 0 && selectedSeeker.bags[0].bag.slots.length < 4)
+        {
+            bagToGiveTo = 0;
+            slotToGiveTo = selectedSeeker.bags[0].bag.slots.length;
+        }
+        else if (bagToGiveTo < 0 && selectedSeeker.bags[1].bag.slots.length < 4)
+        {
+            bagToGiveTo = 1;
+            slotToGiveTo = selectedSeeker.bags[0].bag.slots.length;
+        }
 
-        if (slotToTakeFrom < 0) {
+
+
+
+        if (bagToTakeFrom < 0) {
             ds.log('Not enough wood');
             return;
         }
 
-        if (slotToGiveTo < 0) {
+        if (bagToGiveTo < 0) {
             ds.log('No empty slot to receive item');
             return;
         }
-
 
 
 
@@ -75,7 +103,7 @@ export default function update({ selected }) {
                 args: [
                     selectedSeeker.id,
                     [selectedSeeker.id, selectedBuilding.id],
-                    [0, 0],
+                    [bagToTakeFrom, 0],
                     [slotToTakeFrom, 0],
                     2
                 ]
@@ -84,7 +112,7 @@ export default function update({ selected }) {
                 name: 'BUILDING_USE',
                 args: [selectedBuilding.id, selectedSeeker.id, ds.encodeCall(
                     'function CRAFT_FUNCTION(uint64, uint64, uint8)',
-                    [selectedBuilding.bags[0].bag.key, selectedSeeker.bags[0].bag.key, slotToGiveTo]
+                    [selectedBuilding.bags[0].bag.key, selectedSeeker.bags[bagToGiveTo].bag.key, slotToGiveTo]
                 )]
             }
         );
