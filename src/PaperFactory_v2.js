@@ -39,6 +39,13 @@ export default function update({ selected }) {
         var bagToGiveTo = -1;
         var slotToGiveTo = -1;
 
+        var foundMatchingStack = false;
+
+
+
+        //Paper ID
+        //'0x6a7a67f0399c54b001506170657200000000000000000000'
+
 
         for (var bagIndex = 0; bagIndex < selectedSeeker.bags.length; bagIndex++)
         {
@@ -53,17 +60,24 @@ export default function update({ selected }) {
                         bagToTakeFrom = bagIndex;
                         slotToTakeFrom = slotIndex;
 
-                        if (bagToGiveTo < 0 && thisSlot.balance === 2)
+                        if (bagToGiveTo < 0 && !foundMatchingStack && thisSlot.balance === 2)
                         {
                             bagToGiveTo = bagIndex;
                             slotToGiveTo = slotIndex;
                         }
                     }
 
-                    if (bagToGiveTo < 0 && thisSlot.balance === 0)
+                    if (bagToGiveTo < 0 && !foundMatchingStack && thisSlot.balance === 0)
                     {
                         bagToGiveTo = bagIndex;
                         slotToGiveTo = slotIndex;
+                    }
+
+                    if (!foundMatchingStack && thisSlot.item && thisSlot.item.id === '0x6a7a67f0399c54b001506170657200000000000000000000' && thisSlot.balance < 100)
+                    {
+                        bagToGiveTo = bagIndex;
+                        slotToGiveTo = slotIndex;
+                        foundMatchingStack = true;
                     }
                 }
             }
