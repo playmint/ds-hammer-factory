@@ -29,25 +29,37 @@ export default function update({ selected }) {
             ds.log('no target bag found');
             return;
         }
+
+        const seekerBagOwner = selectedSeeker.id;
+        const buildingBagOwner = selectedBuilding.id;
+        const ownerBagSlot = 0;
+        const bagWoodSlot = 0;
+        const bagIronSlot = 1;
+        const dummyBagIdIncaseToBagDoesNotExist = `0x${'00'.repeat(24)}`;
+        const woodQuantity = 20;
+        const ironQuantity = 12;
+
         ds.dispatch(
-            {
+            {                 
                 name: 'TRANSFER_ITEM_SEEKER',
                 args: [
                     selectedSeeker.id,
-                    [selectedSeeker.id, selectedBuilding.id],
-                    [0, 0],
-                    [0, 0],
-                    20
+                    [seekerBagOwner, buildingBagOwner],
+                    [ownerBagSlot, ownerBagSlot],
+                    [bagWoodSlot, bagWoodSlot],
+                    dummyBagIdIncaseToBagDoesNotExist,
+                    woodQuantity,
                 ]
             },
             {
                 name: 'TRANSFER_ITEM_SEEKER',
                 args: [
                     selectedSeeker.id,
-                    [selectedSeeker.id, selectedBuilding.id],
-                    [0, 0],
-                    [1, 1],
-                    12
+                    [seekerBagOwner, buildingBagOwner],
+                    [ownerBagSlot, ownerBagSlot],
+                    [bagIronSlot, bagIronSlot],
+                    dummyBagIdIncaseToBagDoesNotExist,
+                    ironQuantity,
                 ]
             },
             {
