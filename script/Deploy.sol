@@ -54,7 +54,7 @@ contract Deployer is Script {
         // When deploying to local testnet instances of the game (localhost)
         // you can probably leave this as the default of 45342312 as you are
         // unlikely to clash with yourself
-        uint64 buildingKindExtensionID = uint64(vm.envOr("BUILDING_KIND_EXTENSION_ID", uint64(45342312)));
+        uint64 buildingKindExtensionID = uint64(vm.envUint("BUILDING_KIND_EXTENSION_ID"));
         bytes24 buildingKind = Node.BuildingKind(buildingKindExtensionID);
 
         // BUILDING_KIND_PLUGIN_ID is the unique identifier for your building kind's frontend plugin

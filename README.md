@@ -31,8 +31,8 @@ query {
 
 The returned `id` is the game address.
 
-Deploy the BuildingKind extension and plugin, substituting the correct game id you found above:
+Deploy the BuildingKind extension and plugin, substituting the correct value for the `GAME_ADDRESS` you found above, and picking a number between 1 and 9223372036854775807 to be your `BUILDING_KIND_EXTENSION_ID`:
 
 ```
-GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy.sol --broadcast --verify --rpc-url "http://localhost:8545"
+BUILDING_KIND_EXTENSION_ID=45342312 GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy.sol --broadcast --verify --rpc-url "http://localhost:8545"
 ```
