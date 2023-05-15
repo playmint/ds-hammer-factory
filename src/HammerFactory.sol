@@ -8,8 +8,7 @@ import {BuildingKind} from "@ds/ext/BuildingKind.sol";
 import {console} from "forge-std/console.sol";
 
 uint8 constant MAX_CRAFT_INPUT_ITEMS = 4; // TODO: move this into crafting rule
-uint64 constant HAMMER_WOOD_QTY = 20;
-uint64 constant HAMMER_IRON_QTY = 12;
+
 string constant HAMMER_NAME = "Hammer";
 
 interface ExtensionActions {
@@ -30,9 +29,9 @@ contract HammerFactory is BuildingKind {
 
         // Recipe
         inputItems[0] = Node.Resource(ResourceKind.WOOD);
-        inputQty[0] = HAMMER_WOOD_QTY;
+        inputQty[0] = 20;
         inputItems[1] = Node.Resource(ResourceKind.IRON);
-        inputQty[1] = HAMMER_IRON_QTY;
+        inputQty[1] = 12;
 
         // Boolean is the 'stackable' flag
         ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, false, HAMMER_NAME)));
