@@ -51,7 +51,7 @@ contract HammerFactory is BuildingKind {
             // console.log("destBag: ", _toHexString(uint192(destBag), 24));
 
             ds.getDispatcher().dispatch(
-                abi.encodeCall(Actions.CRAFT_EQUIPABLE, (Node.Bag(inBag), hammerID, Node.Bag(destBag), destItemSlot))
+                abi.encodeCall(Actions.CRAFT_EQUIPABLE, (Node.Bag(inBag), itemID, Node.Bag(destBag), destItemSlot))
             );
         }
     }
