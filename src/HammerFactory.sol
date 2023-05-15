@@ -9,10 +9,10 @@ import {console} from "forge-std/console.sol";
 
 uint8 constant MAX_CRAFT_INPUT_ITEMS = 4; // TODO: move this into crafting rule
 
-string constant HAMMER_NAME = "Hammer";
+string constant ITEM_NAME = "Hammer";
 
 interface ExtensionActions {
-    function CRAFT_HAMMER(
+    function CRAFT_ITEM(
         uint64 inBag,
         uint64 destBag,
         uint8 destItemSlot // empty slot
@@ -20,10 +20,10 @@ interface ExtensionActions {
 }
 
 contract HammerFactory is BuildingKind {
-    bytes24 public hammerID;
+    bytes24 public itemID;
 
     constructor(Game ds) {
-        // -- Register the Hammer as an Item
+        // -- Register the Item
         bytes24[MAX_CRAFT_INPUT_ITEMS] memory inputItems;
         uint64[MAX_CRAFT_INPUT_ITEMS] memory inputQty;
 
@@ -34,15 +34,15 @@ contract HammerFactory is BuildingKind {
         inputQty[1] = 12;
 
         // Boolean is the 'stackable' flag
-        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, false, HAMMER_NAME)));
+        ds.getDispatcher().dispatch(abi.encodeCall(Actions.REGISTER_ITEM, (inputItems, inputQty, false, ITEM_NAME)));
 
-        hammerID = Node.Item(inputItems, inputQty, false, HAMMER_NAME);
+        itemID = Node.Item(inputItems, inputQty, false, ITEM_NAME);
     }
 
     function use(Game ds, bytes24, /*buildingInstance*/ bytes24, /*seeker*/ bytes calldata payload) public {
         console.log("HammerFactory::use()");
-        if (bytes4(payload) == ExtensionActions.CRAFT_HAMMER.selector) {
-            console.log("HammerFactory::use(): ExtensionActions.CRAFT_HAMMER");
+        if (bytes4(payload) == ExtensionActions.CRAFT_ITEM.selector) {
+            console.log("HammerFactory::use(): ExtensionActions.CRAFT_ITEM");
 
             // decode extension action
             (uint64 inBag, uint64 destBag, uint8 destItemSlot) = abi.decode(payload[4:], (uint64, uint64, uint8));
@@ -55,18 +55,4 @@ contract HammerFactory is BuildingKind {
             );
         }
     }
-
-    // For debugging
-    // bytes16 private constant _SYMBOLS = "0123456789abcdef";
-    // function _toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
-    //     bytes memory buffer = new bytes(2 * length + 2);
-    //     buffer[0] = "0";
-    //     buffer[1] = "x";
-    //     for (uint256 i = 2 * length + 1; i > 1; --i) {
-    //         buffer[i] = _SYMBOLS[value & 0xf];
-    //         value >>= 4;
-    //     }
-    //     require(value == 0, "Strings: hex length insufficient");
-    //     return string(buffer);
-    // }
 }
