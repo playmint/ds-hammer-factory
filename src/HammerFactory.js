@@ -5,7 +5,7 @@ export default function update({ selected }) {
     const { tiles, seeker } = selected || {};
     const selectedTile = tiles && tiles.length === 1 ? tiles[0] : undefined;
     const selectedBuilding = selectedTile && selectedTile.building ? selectedTile.building : undefined;
-    const selectedSeeker = seeker;
+    const selectedEngineer = seeker;
 
     // TODO: stop assuming the things to xfer are in seeker's bag[0].slot[0/1], allow player to select where to xfer from
     // TODO: stop assuming bag[0].slot[2] is empty, find an empty one or allow selecting
@@ -13,15 +13,15 @@ export default function update({ selected }) {
     // TODO: validate that the player is actually at the location before showing craft button
     // TODO:
     const craft = () => {
-        if (!selectedSeeker) {
-            ds.log('no selected seeker');
+        if (!selectedEngineer) {
+            ds.log('no selected engineer');
             return;
         }
         if (!selectedBuilding) {
             ds.log('no selected building');
             return;
         }
-        if (!selectedSeeker.bags[0] || !selectedBuilding.bags[0].bag) {
+        if (!selectedEngineer.bags[0] || !selectedBuilding.bags[0].bag) {
             ds.log('no source bag found');
             return;
         }
@@ -30,43 +30,56 @@ export default function update({ selected }) {
             return;
         }
 
-        const seekerBagOwner = selectedSeeker.id;
+        //We need the IDs of the Engineer and building
+        const engineerBagOwner = selectedEngineer.id;
         const buildingBagOwner = selectedBuilding.id;
-        const ownerBagSlot = 0;
-        const bagWoodSlot = 0;
-        const bagIronSlot = 1;
+
+        //The engineer's bag we are interacting with (0 = top bag, 1 = bottom bag)
+        const engineerBag = 0;
+
+        //The slot and quantity for the first Input item
+        const bagInputSlot0 = 0;
+        const inputQuantity0 = 20;
+
+        //The slot and quantity for the second Input item
+        const bagInputSlot1 = 1;
+        const inputQuantity1 = 12;
+
+        //The slot that will receive crafted item
+        const bagOutputSlot = 2
+
         const dummyBagIdIncaseToBagDoesNotExist = `0x${'00'.repeat(24)}`;
-        const woodQuantity = 20;
-        const ironQuantity = 12;
+
+
 
         ds.dispatch(
-            {                 
+            {
                 name: 'TRANSFER_ITEM_SEEKER',
                 args: [
-                    selectedSeeker.id,
-                    [seekerBagOwner, buildingBagOwner],
-                    [ownerBagSlot, ownerBagSlot],
-                    [bagWoodSlot, bagWoodSlot],
+                    selectedEngineer.id,
+                    [engineerBagOwner, buildingBagOwner],
+                    [engineerBag, engineerBag],
+                    [bagInputSlot0, bagInputSlot0],
                     dummyBagIdIncaseToBagDoesNotExist,
-                    woodQuantity,
+                    inputQuantity0,
                 ]
             },
             {
                 name: 'TRANSFER_ITEM_SEEKER',
                 args: [
-                    selectedSeeker.id,
-                    [seekerBagOwner, buildingBagOwner],
-                    [ownerBagSlot, ownerBagSlot],
-                    [bagIronSlot, bagIronSlot],
+                    selectedEngineer.id,
+                    [engineerBagOwner, buildingBagOwner],
+                    [engineerBag, engineerBag],
+                    [bagInputSlot1, bagInputSlot1],
                     dummyBagIdIncaseToBagDoesNotExist,
-                    ironQuantity,
+                    inputQuantity1,
                 ]
             },
             {
                 name: 'BUILDING_USE',
-                args: [selectedBuilding.id, selectedSeeker.id, ds.encodeCall(
+                args: [selectedBuilding.id, selectedEngineer.id, ds.encodeCall(
                     'function CRAFT_ITEM(uint64, uint64, uint8)',
-                    [selectedBuilding.bags[0].bag.key, selectedSeeker.bags[0].bag.key, 2]
+                    [selectedBuilding.bags[0].bag.key, selectedEngineer.bags[0].bag.key, bagOutputSlot]
                 )]
             },
         );
