@@ -2,10 +2,10 @@ import ds from 'dawnseekers';
 
 export default function update({ selected }) {
 
-    const { tiles, engineer } = selected || {};
+    const { tiles, seeker } = selected || {};
     const selectedTile = tiles && tiles.length === 1 ? tiles[0] : undefined;
     const selectedBuilding = selectedTile && selectedTile.building ? selectedTile.building : undefined;
-    const selectedEngineer = engineer;
+    const selectedEngineer = seeker;
 
     // TODO: stop assuming the things to xfer are in seeker's bag[0].slot[0/1], allow player to select where to xfer from
     // TODO: stop assuming bag[0].slot[2] is empty, find an empty one or allow selecting
