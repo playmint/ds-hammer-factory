@@ -10,7 +10,7 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Rel, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE, Schema} from "@ds/schema/Schema.sol";
 import {BUILDING_COST} from "@ds/rules/BuildingRule.sol";
 import {
-    HammerFactory, ExtensionActions, HAMMER_WOOD_QTY, HAMMER_IRON_QTY, HAMMER_NAME
+    HammerFactory, ExtensionActions, ITEM_NAME
 } from "../src/HammerFactory.sol";
 
 uint32 constant PLAYER_SEEKER_ID = 1;
@@ -69,7 +69,7 @@ contract HammerFactoryTest is Test {
             )
         );
 
-        hammerID = ext.hammerID();
+        hammerID = ext.itemID();
         assertGt(uint192(hammerID), 0, "Bytes expected to be the hammer ID");
 
         // discover an adjacent tile for our building site
@@ -85,12 +85,23 @@ contract HammerFactoryTest is Test {
 
         uint256 bobPrivateKey = 0xB0B;
         bobAccount = vm.addr(bobPrivateKey);
-        bobSeeker = _spawnSeeker(bobAccount, BUILDER_SEEKER_ID, 0, 0, 0);
-        // equip the seeker with a bag with enough wood
-        _spawnBagWithWood(1, bobAccount, bobSeeker, EQUIP_SLOT_0, BUILDING_COST);
+        bobSeeker = _spawnSeeker(bobAccount, BUILDER_SEEKER_ID, 0, 0, 0);        
+
+        // -- Make sure there's resources to construct a building
+        // --- Get the building node 
+        //     (Doesn't matter its not constrcuted yet, the ID of a building is based only on its location)
+        buildingInstance = Node.Building(DEFAULT_ZONE, q, r, s);
+        // --- Get a unqiue bag id, based on this location
+        uint64 bagID = uint64(uint256(keccak256(abi.encode(buildingInstance))));
+        // --- Debug spawn bag:
+        //     with bagID
+        //     owned by bob (Shouldn't be necessary but is while construct building constructor to own this bag)
+        //     equipped to the building we are about to create
+        //     equip to EQUIP_SLOT_0 (the buiding could be equipped with multiple bags)
+        //     filled with BUILDING_COST 
+        _spawnBagWithWood(bagID, bobAccount, buildingInstance, EQUIP_SLOT_0, BUILDING_COST);
 
         // -- Construct the building with bob the builder
-
         vm.startPrank(bobAccount);
         buildingInstance = _constructBuilding(bobSeeker, hammerFactoryKind, q, r, s);
         assertGt(uint192(buildingInstance), 0, "Bytes expected to be the building instance");
@@ -113,12 +124,12 @@ contract HammerFactoryTest is Test {
             aliceAccount,
             aliceSeeker,
             1, // equip slot 1
-            [HAMMER_WOOD_QTY, 0, HAMMER_IRON_QTY]
+            [(uint64)(20), 0, 12]
         );
 
         // TODO: Currently anyone can craft from anyone else bag! CraftingRule to check that inBag is owned by Alice
         bytes memory payload = abi.encodeCall(
-            ExtensionActions.CRAFT_HAMMER,
+            ExtensionActions.CRAFT_ITEM,
             (
                 inBagID,
                 destBagID,
@@ -151,9 +162,6 @@ contract HammerFactoryTest is Test {
                 (
                     seeker,
                     buildingKind,
-                    seeker, // which thing is bag attached to
-                    EQUIP_SLOT_0, // which equip slot on the thing
-                    ITEM_SLOT_0, // which item slot contains resource
                     q,
                     r,
                     s
