@@ -9,8 +9,8 @@ export default function update({ selected }) {
     const engineerBagOwner = selectedEngineer.id;
 
 
-    /* //This doesn't work. Need to work out how to get the Seeker's tile
-    if (selectedTile !== selectedEngineer.tile) {
+    //Don't show anything if the Engineer is not on the building
+    if (selectedEngineer.nextLocation.tile.id !== selectedTile.id) {
         return {
             version: 1,
             components: [
@@ -23,7 +23,7 @@ export default function update({ selected }) {
             ],
         };
     }
-    */
+    
 
     var hasRubberDuck = false
 
@@ -50,7 +50,7 @@ export default function update({ selected }) {
                 {
                     type: 'building',
                     id: 'duck-fanatic',
-                    title: 'Rubber Duck Fanatic',
+                    title: 'Duck Fanatic',
                     summary: 'I love your duck!'                 
                 },
             ],
@@ -64,7 +64,7 @@ export default function update({ selected }) {
                 {
                     type: 'building',
                     id: 'duck-fanatic',
-                    title: 'Rubber Duck Fanatic',
+                    title: 'Duck Fanatic',
                     summary: 'You have no duck. Leave me alone!'
                 },
             ],
