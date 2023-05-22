@@ -7,11 +7,11 @@ import {Dispatcher} from "cog/Dispatcher.sol";
 import {State} from "cog/State.sol";
 import {Game} from "@ds/Game.sol";
 import {Actions} from "@ds/actions/Actions.sol";
-import {Node, Rel, BiomeKind, ResourceKind, AtomKind, DEFAULT_ZONE, Schema} from "@ds/schema/Schema.sol";
-import {BUILDING_COST} from "@ds/rules/BuildingRule.sol";
-import {
-    HammerFactory, ExtensionActions, ITEM_NAME
-} from "../src/HammerFactory.sol";
+import {Node, Rel, BiomeKind, DEFAULT_ZONE, Schema} from "@ds/schema/Schema.sol";
+import {ItemUtils} from "@ds/utils/ItemUtils.sol";
+import {Deployer} from '../script/Deploy.sol';
+
+using Schema for State;
 
 uint32 constant PLAYER_SEEKER_ID = 1;
 uint32 constant BUILDER_SEEKER_ID = 2;
@@ -26,168 +26,89 @@ uint8 constant ITEM_SLOT_1 = 1;
 uint64 constant BUILDING_KIND_EXTENSION_ID = 45342312;
 uint64 constant BUILDING_KIND_PLUGIN_ID = 45342312;
 
+
 contract HammerFactoryTest is Test {
-    HammerFactory internal ext;
     Game internal ds;
     Dispatcher internal dispatcher;
+    Deployer deployer;
     State internal state;
-
-    bytes24 buildingInstance;
-
-    // accounts
-    address bobAccount;
-    bytes24 bobSeeker;
-    address aliceAccount;
-    bytes24 aliceSeeker;
-
-    bytes24 hammerID;
+    uint64 sid;
 
     function setUp() public {
-        // setup dawnseekers
         ds = new Game();
         state = ds.getState();
         dispatcher = ds.getDispatcher();
+        deployer = new Deployer();
+    }
 
-        // As the tets call `use()` directly I'm caching a ref to the extension
-        ext = new HammerFactory(ds);
+    function testConstructAndCraft() public {
 
-        // deploy and register the HammerFactory as a building kind
-        bytes24 hammerFactoryKind = Node.BuildingKind(BUILDING_KIND_EXTENSION_ID);
-        // vm.expectEmit(true, true, true, true, address(state));
-        // emit AnnotationSet(hammerFactoryKind, AnnotationKind.CALLDATA, "name", keccak256(bytes(buildingName)), buildingName);
-        dispatcher.dispatch(abi.encodeCall(Actions.REGISTER_BUILDING_KIND, (hammerFactoryKind, "hammerFactory")));
-        dispatcher.dispatch(abi.encodeCall(Actions.REGISTER_BUILDING_CONTRACT, (hammerFactoryKind, address(ext))));
-        dispatcher.dispatch(
-            abi.encodeCall(
-                Actions.REGISTER_CLIENT_PLUGIN,
-                (
-                    Node.ClientPlugin(BUILDING_KIND_PLUGIN_ID),
-                    hammerFactoryKind,
-                    "my-hammer-factory-plugin",
-                    "export default function update(){}"
-                )
-            )
-        );
-
-        hammerID = ext.itemID();
-        assertGt(uint192(hammerID), 0, "Bytes expected to be the hammer ID");
-
-        // discover an adjacent tile for our building site
-        (int16 q, int16 r, int16 s) = (1, -1, 0);
-        _discover(q, r, s);
-
-        // -- Setup users
-
+        // alice is a player
         uint256 alicePrivateKey = 0xA11CE;
-        aliceAccount = vm.addr(alicePrivateKey);
-        // Spawn alice's seeker on the tile on which the building will be constructed
-        aliceSeeker = _spawnSeeker(aliceAccount, PLAYER_SEEKER_ID, q, r, s);
-
-        uint256 bobPrivateKey = 0xB0B;
-        bobAccount = vm.addr(bobPrivateKey);
-        bobSeeker = _spawnSeeker(bobAccount, BUILDER_SEEKER_ID, 0, 0, 0);        
-
-        // -- Make sure there's resources to construct a building
-        // --- Get the building node 
-        //     (Doesn't matter its not constrcuted yet, the ID of a building is based only on its location)
-        buildingInstance = Node.Building(DEFAULT_ZONE, q, r, s);
-        // --- Get a unqiue bag id, based on this location
-        uint64 bagID = uint64(uint256(keccak256(abi.encode(buildingInstance))));
-        // --- Debug spawn bag:
-        //     with bagID
-        //     owned by bob (Shouldn't be necessary but is while construct building constructor to own this bag)
-        //     equipped to the building we are about to create
-        //     equip to EQUIP_SLOT_0 (the buiding could be equipped with multiple bags)
-        //     filled with BUILDING_COST 
-        _spawnBagWithWood(bagID, bobAccount, buildingInstance, EQUIP_SLOT_0, BUILDING_COST);
-
-        // -- Construct the building with bob the builder
-        vm.startPrank(bobAccount);
-        buildingInstance = _constructBuilding(bobSeeker, hammerFactoryKind, q, r, s);
-        assertGt(uint192(buildingInstance), 0, "Bytes expected to be the building instance");
-        vm.stopPrank();
-    }
-
-    function testItemRegistered() public {
-        uint64[] memory numAtoms = Schema.getAtoms(state, hammerID);
-
-        assertGt(numAtoms[uint8(AtomKind.LIFE)], 0, "Expected LIFE atoms to be greater than 0");
-        assertGt(numAtoms[uint8(AtomKind.ATK)], 0, "Expected ATK atoms to be greater than 0");
-    }
-
-    function testBuildingUse() public {
-        uint64 destBagID = 1;
-        bytes24 destBag = _spawnBagEmpty(destBagID, aliceAccount, aliceSeeker, 0);
-        uint64 inBagID = 2;
-        _spawnBagWithResources(
-            inBagID,
-            aliceAccount,
-            aliceSeeker,
-            1, // equip slot 1
-            [(uint64)(20), 0, 12]
-        );
-
-        // TODO: Currently anyone can craft from anyone else bag! CraftingRule to check that inBag is owned by Alice
-        bytes memory payload = abi.encodeCall(
-            ExtensionActions.CRAFT_ITEM,
-            (
-                inBagID,
-                destBagID,
-                0 // destination slot
-            )
-        );
-
-        // act as the player "alice"
+        address aliceAccount = vm.addr(alicePrivateKey);
         vm.startPrank(aliceAccount);
-        dispatcher.dispatch(abi.encodeCall(Actions.BUILDING_USE, (buildingInstance, aliceSeeker, payload)));
 
-        // check that the "balance" relationship exists between seeker's Bag --> Item
-        (bytes24 itemID, uint64 bal) = state.get(Rel.Balance.selector, 0, destBag);
-        assertEq(itemID, hammerID, "Expected item at slot 0 to be hammer");
-        assertEq(bal, 1, "Expected hammer item to have a balance of 1");
+        // alice uses the deploy script to register her new item and building kinds
+        bytes24 hammerItem    = deployer.registerHammerItem(ds, BUILDING_KIND_EXTENSION_ID);
+        bytes24 hammerFactory = deployer.registerHammerFactory(ds, BUILDING_KIND_EXTENSION_ID, hammerItem);
 
-        // stop acting as alice
+        // ...she has a seeker at tile 0,0,0
+        bytes24 seeker = _spawnSeekerWithResources();
+
+        // ...her seeker constructs an instance of the building on an adjacent tile
+        bytes24 buildingInstance = _constructBuilding(hammerFactory, seeker, -1, 1, 0);
+
+        // ...the seeker places the required inputs into the input slots by transfering items
+        _transferFromSeekerToInput(seeker, 0, 20, buildingInstance);
+        _transferFromSeekerToInput(seeker, 1, 12, buildingInstance);
+
+        // ...she then tells her seeker to "use" the building
+        dispatcher.dispatch(abi.encodeCall(Actions.BUILDING_USE, (buildingInstance, seeker, bytes(""))));
+
+        // the output slot should now contain a hammer
+        bytes24 outputBag = state.getEquipSlot(buildingInstance, 1);
+        (bytes24 outputItem, uint64 outputQty) = state.getItemSlot(outputBag, 0);
+        assertEq(outputItem, hammerItem, "Expected item at output slot 0 to be hammer");
+        assertEq(outputQty, 1, "Expected hammer item to have a balance of 1");
+
+        // stop being alice
         vm.stopPrank();
     }
 
     // -- Helper functions
 
-    function _constructBuilding(bytes24 seeker, bytes24 buildingKind, int16 q, int16 r, int16 s)
-        private
-        returns (bytes24 _buildingInstance)
-    {
+    function _spawnSeekerWithResources() private returns (bytes24) {
+        sid++;
+        bytes24 seeker = Node.Seeker(sid);
+        _discover(0, 0, 0);
+        dispatcher.dispatch(abi.encodeCall(Actions.SPAWN_SEEKER, (seeker)));
+        bytes24[] memory items = new bytes24[](3);
+        items[0] = ItemUtils.Kiki();
+        items[1] = ItemUtils.Bouba();
+        items[2] = ItemUtils.Semiote();
+
+        uint64[] memory balances = new uint64[](3);
+        balances[0] = 100;
+        balances[1] = 100;
+        balances[2] = 100;
+
+        uint64 seekerBag = uint64(uint256(keccak256(abi.encode(seeker))));
         dispatcher.dispatch(
             abi.encodeCall(
-                Actions.CONSTRUCT_BUILDING_SEEKER,
-                (
-                    seeker,
-                    buildingKind,
-                    q,
-                    r,
-                    s
-                )
+                Actions.DEV_SPAWN_BAG, (seekerBag, state.getOwnerAddress(seeker), seeker, 0, items, balances)
             )
         );
 
-        // make full building id
-        _buildingInstance = Node.Building(DEFAULT_ZONE, q, r, s);
+        return seeker;
     }
 
-    function _spawnSeeker(address owner, uint32 sid, int16 q, int16 r, int16 s) private returns (bytes24) {
-        _discover(q, r, s); // discover the tile we place seeker on
+    function _transferFromSeekerToInput(bytes24 seeker, uint8 slot, uint64 qty, bytes24 buildingInstance) private {
+        bytes24 inputBag = state.getEquipSlot(buildingInstance, 0);
         dispatcher.dispatch(
             abi.encodeCall(
-                Actions.DEV_SPAWN_SEEKER,
-                (
-                    owner, // owner
-                    sid, // seeker id (sid)
-                    q, // q
-                    r, // r
-                    s // s
-                )
+                Actions.TRANSFER_ITEM_SEEKER, (seeker, [seeker, buildingInstance], [0, 0], [slot, slot], inputBag, qty)
             )
         );
-        return Node.Seeker(sid);
     }
 
     function _discover(int16 q, int16 r, int16 s) private {
@@ -204,57 +125,22 @@ contract HammerFactoryTest is Test {
         );
     }
 
-    function _spawnBagWithWood(uint64 bagID, address owner, bytes24 equipNode, uint8 equipSlot, uint64 qty)
+    function _constructBuilding(bytes24 buildingKind, bytes24 seeker, int16 q, int16 r, int16 s)
         private
-        returns (bytes24)
+        returns (bytes24 buildingInstance)
     {
-        bytes24[] memory items = new bytes24[](1);
-        items[0] = Node.Resource(ResourceKind.WOOD);
-        uint64[] memory balances = new uint64[](1);
-        balances[0] = qty;
-        return _spawnBag(bagID, owner, equipNode, equipSlot, items, balances);
-    }
-
-    function _spawnBagWithResources(
-        uint64 bagID,
-        address owner,
-        bytes24 equipNode,
-        uint8 equipSlot,
-        uint64[3] memory resourceQty
-    ) private returns (bytes24) {
-        bytes24[] memory items = new bytes24[](3);
-        uint64[] memory balances = new uint64[](3);
-
-        uint8 slotId = 0;
-        for (uint8 i = 0; i < 3; i++) {
-            if (resourceQty[i] > 0) {
-                items[slotId] = Node.Resource(ResourceKind(i + 1));
-                balances[slotId] = resourceQty[i];
-                slotId++;
-            }
-        }
-
-        return _spawnBag(bagID, owner, equipNode, equipSlot, items, balances);
-    }
-
-    function _spawnBag(
-        uint64 bagID,
-        address owner,
-        bytes24 equipNode,
-        uint8 equipSlot,
-        bytes24[] memory resources,
-        uint64[] memory qty
-    ) private returns (bytes24) {
-        dispatcher.dispatch(abi.encodeCall(Actions.DEV_SPAWN_BAG, (bagID, owner, equipNode, equipSlot, resources, qty)));
-        return Node.Bag(bagID);
-    }
-
-    function _spawnBagEmpty(uint64 bagID, address owner, bytes24 equipNode, uint8 equipSlot)
-        private
-        returns (bytes24)
-    {
-        bytes24[] memory items = new bytes24[](0);
-        uint64[] memory balances = new uint64[](0);
-        return _spawnBag(bagID, owner, equipNode, equipSlot, items, balances);
+        // force discover target tile
+        _discover(q, r, s);
+        // get our building and give it the resources to construct
+        buildingInstance = Node.Building(0, q, r, s);
+        // magic required construction materials into the construct slot
+        bytes24 buildingBag = Node.Bag(uint64(uint256(keccak256(abi.encode(buildingInstance)))));
+        state.setEquipSlot(buildingInstance, 0, buildingBag);
+        state.setItemSlot(buildingBag, 0, ItemUtils.Kiki(), 25);
+        state.setItemSlot(buildingBag, 1, ItemUtils.Bouba(), 25);
+        state.setItemSlot(buildingBag, 2, ItemUtils.Semiote(), 25);
+        // construct our building
+        dispatcher.dispatch(abi.encodeCall(Actions.CONSTRUCT_BUILDING_SEEKER, (seeker, buildingKind, q, r, s)));
+        return buildingInstance;
     }
 }
