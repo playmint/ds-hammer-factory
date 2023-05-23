@@ -8,7 +8,8 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Schema, State} from "@ds/schema/Schema.sol";
 import {ItemUtils, ItemConfig} from "@ds/utils/ItemUtils.sol";
 import {BuildingUtils, BuildingConfig, Material, Input, Output} from "@ds/utils/BuildingUtils.sol";
-import {HammerFactory} from "../src/HammerFactory.sol";
+import {Glassworks} from "../src/Glassworks.sol";
+import {Sandcastle} from "../src/Sandcastle.sol";
 
 using Schema for State;
 
@@ -51,67 +52,78 @@ contract Deployer is Script {
         // When deploying to local testnet instances of the game (localhost)
         // you can probably leave this as the default of 45342312 as you are
         // unlikely to clash with yourself
-        uint64 extensionID = uint64(vm.envUint("BUILDING_KIND_EXTENSION_ID"));
+        uint64 extensionID = uint64(uint256(keccak256(abi.encodePacked("farms-glassworks"))));
 
         // connect as the player...
         vm.startBroadcast(playerDeploymentKey);
 
-        // deploy the hammer and hammer factory
-        bytes24 hammerItem    = registerHammerItem(ds, extensionID);
-        bytes24 hammerFactory = registerHammerFactory(ds, extensionID, hammerItem);
-
-        // dump deployed ids
-        console2.log("ItemKind", uint256(bytes32(hammerItem)));
-        console2.log("BuildingKind", uint256(bytes32(hammerFactory)));
-
-        vm.stopBroadcast();
-    }
-
-    // register a new item id
-    function registerHammerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
-        return ItemUtils.register(ds, ItemConfig({
-            id: extensionID,
-            name: "Hammer",
-            icon: "15-38",
-            life: 10,
-            attack: 6,
-            defense: 0,
-            stackable: false,
-            implementation: address(0),
-            plugin: ""
-        }));
-    }
-
-    // register a new
-    function registerHammerFactory(Game ds, uint64 extensionID, bytes24 hammer) public returns (bytes24 buildingKind) {
-
-        // find the base item ids we will use as inputs for our hammer factory
+        // find the base item ids we will use as inputs
         bytes24 none = 0x0;
+        bytes24 cocktail = 0x6a7a67f00000006400000001000000010000000100000000;
         bytes24 kiki = ItemUtils.Kiki();
         bytes24 bouba = ItemUtils.Bouba();
         bytes24 semiote = ItemUtils.Semiote();
 
-        // register a new building kind
-        return BuildingUtils.register(ds, BuildingConfig({
+        // sand
+        bytes24 sand = ItemUtils.register(ds, ItemConfig({
             id: extensionID,
-            name: "Hammer Factory",
+            name: "Bucket Of Sand",
+            icon: "07-89",
+            life: 1,
+            attack: 1,
+            defense: 1,
+            stackable: true,
+            implementation: address(0),
+            plugin: ""
+        }));
+
+        // glassworks
+        BuildingUtils.register(ds, BuildingConfig({
+            id: extensionID,
+            name: "Glassworks",
             materials: [
-                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
-                Material({quantity: 10, item: bouba}),
+                Material({quantity: 10, item: kiki}),
                 Material({quantity: 10, item: semiote}),
+                Material({quantity: 10, item: bouba}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [
-                Input({quantity: 20, item: kiki}), // these are required inputs to get the output
-                Input({quantity: 12, item: bouba}),
+                Input({quantity: 4, item: cocktail}),
+                Input({quantity: 4, item: semiote}),
                 Input({quantity: 0, item: none}),
                 Input({quantity: 0, item: none})
             ],
             outputs: [
-                Output({quantity: 1, item: hammer}) // this is the output that can be crafted given the inputs
+                Output({quantity: 2, item: sand})
             ],
-            implementation: address(new HammerFactory()),
-            plugin: vm.readFile("src/HammerFactory.js")
+            implementation: address(new Glassworks()),
+            plugin: vm.readFile("src/Glassworks.js")
         }));
+
+        // sandcastle
+        BuildingUtils.register(ds, BuildingConfig({
+            id: uint64(uint256(keccak256(abi.encodePacked("farms-sandcastle")))),
+            name: "Sandcastle",
+            materials: [
+                Material({quantity: 10, item: sand}),
+                Material({quantity: 0, item: none}),
+                Material({quantity: 0, item: none}),
+                Material({quantity: 0, item: none})
+            ],
+            inputs: [
+                Input({quantity: 0, item: none}),
+                Input({quantity: 0, item: none}),
+                Input({quantity: 0, item: none}),
+                Input({quantity: 0, item: none})
+            ],
+            outputs: [
+                Output({quantity: 0, item: none})
+            ],
+            implementation: address(new Sandcastle()),
+            plugin: vm.readFile("src/Sandcastle.js")
+        }));
+
+        vm.stopBroadcast();
     }
+
 }

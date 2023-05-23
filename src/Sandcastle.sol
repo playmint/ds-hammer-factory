@@ -6,11 +6,10 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {BuildingKind} from "@ds/ext/BuildingKind.sol";
 import {console} from "forge-std/console.sol";
 
-contract HammerFactory is BuildingKind {
+contract Sandcastle is BuildingKind {
 
     function use(Game ds, bytes24 buildingInstance, bytes24, /*seeker*/ bytes calldata /*payload*/) public {
 
-        ds.getDispatcher().dispatch(abi.encodeCall(Actions.CRAFT, (buildingInstance)));
 
     }
 }

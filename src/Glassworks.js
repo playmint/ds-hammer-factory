@@ -43,7 +43,6 @@ export default function update({ selected, world }) {
             },
         );
 
-        ds.log('HammerFactory says: Hammer Time!');
     };
 
     return {
@@ -51,14 +50,14 @@ export default function update({ selected, world }) {
         components: [
             {
                 type: 'building',
-                id: 'my-hammer-factory',
-                title: 'Hammer Factory',
-                summary: `Add ${want0?.balance}x ${want0?.item?.name?.value} and ${want1?.balance}x ${want1?.item?.name?.value} to craft a ${out0?.item?.name?.value}`,
+                id: 'my-factory',
+                title: 'Glassworks',
+                summary: `Crushes cocktail glasses into sand`,
                 content: [
                     {
                         id: 'default',
                         type: 'inline',
-                        buttons: [{ text: 'Craft Hammer', type: 'action', action: craft, disabled: !canCraft }],
+                        buttons: [{ text: 'Crush Glasses', type: 'action', action: craft, disabled: !canCraft }],
                     },
                 ],
             },
