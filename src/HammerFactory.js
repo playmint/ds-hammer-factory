@@ -1,17 +1,31 @@
 import ds from 'dawnseekers';
 
-export default function update({ selected }) {
+export default function update({ selected, world }) {
 
     const { tiles, seeker } = selected || {};
     const selectedTile = tiles && tiles.length === 1 ? tiles[0] : undefined;
-    const selectedBuilding = selectedTile && selectedTile.building ? selectedTile.building : undefined;
+    const selectedBuilding = selectedTile?.building;
     const selectedEngineer = seeker;
 
-    // TODO: stop assuming the things to xfer are in seeker's bag[0].slot[0/1], allow player to select where to xfer from
-    // TODO: stop assuming bag[0].slot[2] is empty, find an empty one or allow selecting
-    // TODO: validate that the player has enough resources to pay
-    // TODO: validate that the player is actually at the location before showing craft button
-    // TODO:
+    // fetch the expected inputs item kinds
+    const requiredInputs = selectedBuilding?.kind?.inputs || [];
+    const want0 = requiredInputs.find(inp => inp.key == 0);
+    const want1 = requiredInputs.find(inp => inp.key == 1);
+
+    // fetch what is currently in the input slots
+    const inputSlots = selectedBuilding?.bags.find(b => b.key == 0).bag?.slots || [];
+    const got0 = inputSlots?.find(slot => slot.key == 0);
+    const got1 = inputSlots?.find(slot => slot.key == 1);
+
+    // fetch our output item details
+    const expectedOutputs = selectedBuilding?.kind?.outputs || [];
+    const out0 = expectedOutputs?.find(slot => slot.key == 0);
+
+    // try to detect if the input slots contain enough stuff to craft
+    const canCraft = selectedEngineer
+        && want0 && got0 && want0.balance == got0.balance
+        && want1 && got1 && want1.balance == got1.balance;
+
     const craft = () => {
         if (!selectedEngineer) {
             ds.log('no selected engineer');
@@ -21,68 +35,14 @@ export default function update({ selected }) {
             ds.log('no selected building');
             return;
         }
-        if (!selectedEngineer.bags[0] || !selectedBuilding.bags[0].bag) {
-            ds.log('no source bag found');
-            return;
-        }
-        if (!selectedBuilding.bags[0] || !selectedBuilding.bags[0].bag) {
-            ds.log('no target bag found');
-            return;
-        }
-
-        //We need the IDs of the Engineer and building
-        const engineerBagOwner = selectedEngineer.id;
-        const buildingBagOwner = selectedBuilding.id;
-
-        //The engineer's bag we are interacting with (0 = top bag, 1 = bottom bag)
-        const engineerBag = 0;
-
-        //The slot and quantity for the first Input item
-        const bagInputSlot0 = 0;
-        const inputQuantity0 = 20;
-
-        //The slot and quantity for the second Input item
-        const bagInputSlot1 = 1;
-        const inputQuantity1 = 12;
-
-        //The slot that will receive crafted item
-        const bagOutputSlot = 2
-
-        const dummyBagIdIncaseToBagDoesNotExist = `0x${'00'.repeat(24)}`;
-
-
 
         ds.dispatch(
             {
-                name: 'TRANSFER_ITEM_SEEKER',
-                args: [
-                    selectedEngineer.id,
-                    [engineerBagOwner, buildingBagOwner],
-                    [engineerBag, engineerBag],
-                    [bagInputSlot0, bagInputSlot0],
-                    dummyBagIdIncaseToBagDoesNotExist,
-                    inputQuantity0,
-                ]
-            },
-            {
-                name: 'TRANSFER_ITEM_SEEKER',
-                args: [
-                    selectedEngineer.id,
-                    [engineerBagOwner, buildingBagOwner],
-                    [engineerBag, engineerBag],
-                    [bagInputSlot1, bagInputSlot1],
-                    dummyBagIdIncaseToBagDoesNotExist,
-                    inputQuantity1,
-                ]
-            },
-            {
                 name: 'BUILDING_USE',
-                args: [selectedBuilding.id, selectedEngineer.id, ds.encodeCall(
-                    'function CRAFT_ITEM(uint64, uint64, uint8)',
-                    [selectedBuilding.bags[0].bag.key, selectedEngineer.bags[0].bag.key, bagOutputSlot]
-                )]
+                args: [selectedBuilding.id, selectedEngineer.id, []]
             },
         );
+
         ds.log('HammerFactory says: Hammer Time!');
     };
 
@@ -93,15 +53,16 @@ export default function update({ selected }) {
                 type: 'building',
                 id: 'my-hammer-factory',
                 title: 'Hammer Factory',
-                summary: 'Arrange your bag with 20 Wood in first slot and 12 Iron in second slot then click craft to have a Hammer placed in an empty third slot.',
+                summary: `Add ${want0?.balance}x ${want0?.item?.name?.value} and ${want1?.balance}x ${want1?.item?.name?.value} to craft a ${out0?.item?.name?.value}`,
                 content: [
                     {
                         id: 'default',
-                        type: 'popout',
-                        buttons: [{ text: 'Craft Hammer', type: 'action', action: craft }],
+                        type: 'inline',
+                        buttons: [{ text: 'Craft Hammer', type: 'action', action: craft, disabled: !canCraft }],
                     },
                 ],
             },
         ],
     };
 }
+
