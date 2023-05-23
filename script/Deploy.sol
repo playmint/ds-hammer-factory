@@ -96,9 +96,9 @@ contract Deployer is Script {
             id: extensionID,
             name: "Hammer Factory",
             materials: [
-                Material({quantity: 25, item: kiki}), // these are what it costs to construct the factory
-                Material({quantity: 25, item: bouba}),
-                Material({quantity: 25, item: semiote}),
+                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
+                Material({quantity: 10, item: bouba}),
+                Material({quantity: 10, item: semiote}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [
