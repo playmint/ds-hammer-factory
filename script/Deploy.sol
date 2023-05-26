@@ -74,8 +74,8 @@ contract Deployer is Script {
             name: "Hammer",
             icon: "15-38",
             life: 10,
-            attack: 6,
             defense: 0,
+            attack: 6,
             stackable: false,
             implementation: address(0),
             plugin: ""
@@ -103,7 +103,7 @@ contract Deployer is Script {
             ],
             inputs: [
                 Input({quantity: 20, item: kiki}), // these are required inputs to get the output
-                Input({quantity: 12, item: bouba}),
+                Input({quantity: 12, item: semiote}),
                 Input({quantity: 0, item: none}),
                 Input({quantity: 0, item: none})
             ],
