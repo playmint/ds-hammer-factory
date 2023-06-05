@@ -34,8 +34,21 @@ contract HammerFactoryTest is Test {
     State internal state;
     uint64 sid;
 
+    // accounts
+    uint256 alicePrivateKey;
+    address aliceAccount;
+
     function setUp() public {
-        ds = new Game();
+        
+        // setup users
+        alicePrivateKey = 0xA11CE;
+        aliceAccount = vm.addr(alicePrivateKey);
+
+        // setup allowlist
+        address[] memory allowlist = new address[](1);
+        allowlist[0] = aliceAccount;
+
+        ds = new Game(allowlist);
         state = ds.getState();
         dispatcher = ds.getDispatcher();
         deployer = new Deployer();
@@ -44,8 +57,6 @@ contract HammerFactoryTest is Test {
     function testConstructAndCraft() public {
 
         // alice is a player
-        uint256 alicePrivateKey = 0xA11CE;
-        address aliceAccount = vm.addr(alicePrivateKey);
         vm.startPrank(aliceAccount);
 
         // alice uses the deploy script to register her new item and building kinds
