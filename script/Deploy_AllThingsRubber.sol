@@ -8,7 +8,7 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Schema, State} from "@ds/schema/Schema.sol";
 import {ItemUtils, ItemConfig} from "@ds/utils/ItemUtils.sol";
 import {BuildingUtils, BuildingConfig, Material, Input, Output} from "@ds/utils/BuildingUtils.sol";
-import {KwikTyre} from "../src/KwikTyre.sol";
+import {AllThingsRubber} from "../src/AllThingsRubber.sol";
 
 using Schema for State;
 
@@ -71,11 +71,11 @@ contract Deployer is Script {
     function registerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
         return ItemUtils.register(ds, ItemConfig({
             id: extensionID,
-            name: "Budget Tyre",
-            icon: "19-231",
-            life: 0,
-            defense: 10,
-            attack: 10,
+            name: "Rubber Duck",
+            icon: "27-101",
+            life: 5,
+            defense: 5,
+            attack: 5,
             stackable: false,
             implementation: address(0),
             plugin: ""
@@ -87,6 +87,8 @@ contract Deployer is Script {
 
         // find the base item ids we will use as inputs
         bytes24 none = 0x0;
+        bytes24 smellyDuck = 0x6a7a67f00005c490000000000000000a0000000000000000;
+        bytes24 budgetTyre = 0x6a7a67f00005c49100000000000000000000000a0000000a;
         bytes24 kiki = ItemUtils.Kiki();
         bytes24 bouba = ItemUtils.Bouba();
         bytes24 semiote = ItemUtils.Semiote();
@@ -94,24 +96,24 @@ contract Deployer is Script {
 
         return BuildingUtils.register(ds, BuildingConfig({
             id: extensionID,
-            name: "Kwik Tyre",
+            name: "All Things Rubber",
             materials: [
-                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
+                Material({quantity: 20, item: kiki}), // these are what it costs to construct the factory
                 Material({quantity: 10, item: semiote}),
                 Material({quantity: 10, item: bouba}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [
-                Input({quantity: 20, item: bouba}), // these are required inputs to get the outpu
-                Input({quantity: 20, item: semiote}),
+                Input({quantity: 1, item: smellyDuck}), // these are required inputs to get the outpu
+                Input({quantity: 1, item: budgetTyre}),
                 Input({quantity: 0, item: none}),
                 Input({quantity: 0, item: none})
             ],
             outputs: [
                 Output({quantity: 1, item: newItem}) // this is the output that can be crafted given the inputs
             ],
-            implementation: address(new KwikTyre()),
-            plugin: vm.readFile("src/KwikTyre.js")
+            implementation: address(new AllThingsRubber()),
+            plugin: vm.readFile("src/AllThingsRubber.js")
         }));
     }
 }

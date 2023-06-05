@@ -8,7 +8,7 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Schema, State} from "@ds/schema/Schema.sol";
 import {ItemUtils, ItemConfig} from "@ds/utils/ItemUtils.sol";
 import {BuildingUtils, BuildingConfig, Material, Input, Output} from "@ds/utils/BuildingUtils.sol";
-import {KwikTyre} from "../src/KwikTyre.sol";
+import {FoulFiends} from "../src/FoulFiends.sol";
 
 using Schema for State;
 
@@ -71,11 +71,11 @@ contract Deployer is Script {
     function registerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
         return ItemUtils.register(ds, ItemConfig({
             id: extensionID,
-            name: "Budget Tyre",
-            icon: "19-231",
-            life: 0,
-            defense: 10,
-            attack: 10,
+            name: "Smelly \"Duck\"",
+            icon: "30-280",
+            life: 10,
+            defense: 0,
+            attack: 0,
             stackable: false,
             implementation: address(0),
             plugin: ""
@@ -94,24 +94,24 @@ contract Deployer is Script {
 
         return BuildingUtils.register(ds, BuildingConfig({
             id: extensionID,
-            name: "Kwik Tyre",
+            name: "Foul Fiends",
             materials: [
-                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
+                Material({quantity: 20, item: kiki}), // these are what it costs to construct the factory
                 Material({quantity: 10, item: semiote}),
                 Material({quantity: 10, item: bouba}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [
-                Input({quantity: 20, item: bouba}), // these are required inputs to get the outpu
-                Input({quantity: 20, item: semiote}),
+                Input({quantity: 20, item: kiki}), // these are required inputs to get the outpu
+                Input({quantity: 0, item: none}),
                 Input({quantity: 0, item: none}),
                 Input({quantity: 0, item: none})
             ],
             outputs: [
                 Output({quantity: 1, item: newItem}) // this is the output that can be crafted given the inputs
             ],
-            implementation: address(new KwikTyre()),
-            plugin: vm.readFile("src/KwikTyre.js")
+            implementation: address(new FoulFiends()),
+            plugin: vm.readFile("src/FoulFiends.js")
         }));
     }
 }
