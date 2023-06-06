@@ -72,9 +72,6 @@ export default function update({ selected, world }) {
     // fetch our output item details
     const expectedOutputs = selectedBuilding?.kind?.outputs || [];
     const out0 = expectedOutputs?.find(slot => slot.key == 0);
-    const out1 = expectedOutputs?.find(slot => slot.key == 1);
-    const out2 = expectedOutputs?.find(slot => slot.key == 2);
-    const out3 = expectedOutputs?.find(slot => slot.key == 3);
 
     // try to detect if the input slots contain enough stuff to craft
     const canCraft = selectedEngineer
@@ -100,11 +97,11 @@ export default function update({ selected, world }) {
             },
         );
 
-        ds.log('A prescient rubber item manufacturer.');
+        ds.log('The hermit cuts off his hand and gives it to you.');
     };
 
     //Show this if there's a rubber duck
-    if (!hasRubberDuck) {
+    if (hasRubberDuck) {
         return {
             version: 1,
             components: [
@@ -112,7 +109,14 @@ export default function update({ selected, world }) {
                     type: 'building',
                     id: 'crazy-hermit',
                     title: 'Crazy Hermit',
-                    summary: 'The crazy hermit looks in wonder at your rubber duck.\n"GIVE DUCK AND KIKIS?\" he asks.\nHe holds his hand out as if to offer a trade.'
+                    summary: 'The crazy hermit looks in wonder at your rubber duck.\n"GIVE DUCK AND KIKIS?\" he asks.\nHe holds his hand out as if to offer a trade.',
+                    content: [
+                        {
+                            id: 'default',
+                            type: 'inline',
+                            buttons: [{ text: 'It\'s a deal!', type: 'action', action: craft, disabled: !canCraft }],
+                        },
+                    ],
                 },
             ],
         };
