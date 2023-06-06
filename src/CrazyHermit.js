@@ -2,7 +2,15 @@ import ds from 'dawnseekers';
 
 export default function update({ selected, world }) {
 
-
+    //Function to test the distance between two tiles
+    function distance(a, b) {
+        return (
+            (Math.abs(Number(BigInt.asIntN(16, a.coords[1])) - Number(BigInt.asIntN(16, b.coords[1]))) +
+                Math.abs(Number(BigInt.asIntN(16, a.coords[2])) - Number(BigInt.asIntN(16, b.coords[2]))) +
+                Math.abs(Number(BigInt.asIntN(16, a.coords[3])) - Number(BigInt.asIntN(16, b.coords[3])))) /
+            2
+        );
+    }
 
     const { tiles, seeker } = selected || {};
     const selectedTile = tiles && tiles.length === 1 ? tiles[0] : undefined;
@@ -10,8 +18,14 @@ export default function update({ selected, world }) {
     const selectedEngineer = seeker;
 
 
-    //Show this if the engineer is not on the building's tile
-    if (selectedEngineer.nextLocation.tile.id !== selectedTile.id) {
+    var engineerDistance = 0;
+    if (selectedEngineer) {
+        engineerDistance = distance(selectedEngineer.nextLocation.tile, selectedTile);
+    }
+
+    
+    //Show this if there is no selected engineer OR the engineer is not adjacent to the building's tile
+    if (!selectedEngineer || engineerDistance > 1) {
         return {
             version: 1,
             components: [
@@ -19,11 +33,12 @@ export default function update({ selected, world }) {
                     type: 'building',
                     id: 'crazy-hermit',
                     title: 'Crazy Hermit',
-                    summary: 'A sign outside gives some simple instructions: \"LEAVE ME ALONE!\"'
+                    summary: "A sign outside gives a simple instruction...\n\"LEAVE ME ALONE!\""
                 },
             ],
         };
     }
+    
 
     //Look for a rubber duck in their bags
     var hasRubberDuck = false
