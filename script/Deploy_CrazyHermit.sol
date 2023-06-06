@@ -74,8 +74,8 @@ contract Deployer is Script {
             name: "Dismembered Hand",
             icon: "01-140",
             life: 100,
-            defense: 1,
-            attack: 1,
+            defense: 0,
+            attack: 0,
             stackable: false,
             implementation: address(0),
             plugin: ""
@@ -103,10 +103,10 @@ contract Deployer is Script {
                 Material({quantity: 0, item: none})
             ],
             inputs: [
-                Input({quantity: 1, item: rubberDuck}), // these are required inputs to get the outpu
-                Input({quantity: 1, item: kiki}),
+                Input({quantity: 1, item: kiki}), // these are required inputs to get the outpu
                 Input({quantity: 1, item: superKiki}),
-                Input({quantity: 1, item: megaKiki})
+                Input({quantity: 1, item: megaKiki}),
+                Input({quantity: 0, item: none})
             ],
             outputs: [
                 Output({quantity: 1, item: newItem}) // this is the output that can be crafted given the inputs

@@ -75,14 +75,12 @@ export default function update({ selected, world }) {
     const want0 = requiredInputs.find(inp => inp.key == 0);
     const want1 = requiredInputs.find(inp => inp.key == 1);
     const want2 = requiredInputs.find(inp => inp.key == 2);
-    const want3 = requiredInputs.find(inp => inp.key == 3);
 
     // fetch what is currently in the input slots
     const inputSlots = selectedBuilding?.bags.find(b => b.key == 0).bag?.slots || [];
     const got0 = inputSlots?.find(slot => slot.key == 0);
     const got1 = inputSlots?.find(slot => slot.key == 1);
     const got2 = inputSlots?.find(slot => slot.key == 2);
-    const got3 = inputSlots?.find(slot => slot.key == 3);
 
     // fetch our output item details
     const expectedOutputs = selectedBuilding?.kind?.outputs || [];
@@ -92,8 +90,7 @@ export default function update({ selected, world }) {
     const canCraft = selectedEngineer
         && want0 && got0 && want0.balance == got0.balance
         && want1 && got1 && want1.balance == got1.balance
-        && want2 && got2 && want2.balance == got2.balance
-        && want3 && got3 && want3.balance == got3.balance;
+        && want2 && got2 && want2.balance == got2.balance;
 
     const craft = () => {
         if (!selectedEngineer) {
@@ -124,7 +121,7 @@ export default function update({ selected, world }) {
                     type: 'building',
                     id: 'crazy-hermit',
                     title: 'Crazy Hermit',
-                    summary: 'The crazy hermit looks in wonder at your rubber duck.\n"GIVE DUCK AND KIKIS?\" he asks.\nHe holds his hand out as if to offer a trade.',
+                    summary: 'The crazy hermit looks in wonder at your rubber duck.\n"GIVE KIKIS?\" he asks.\nHe holds his hand out as if to offer a trade.',
                     content: [
                         {
                             id: 'default',
