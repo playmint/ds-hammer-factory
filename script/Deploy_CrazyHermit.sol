@@ -88,8 +88,6 @@ contract Deployer is Script {
         // find the base item ids we will use as inputs
         bytes24 none = 0x0;
         bytes24 kiki = ItemUtils.Kiki();
-        bytes24 bouba = ItemUtils.Bouba();
-        bytes24 semiote = ItemUtils.Semiote();
         bytes24 superKiki = 0x6a7a67f00005c49300000001000000140000000000000000;
         bytes24 megaKiki = 0x6a7a67f00005c49400000001000000c80000000000000000;
         bytes24 rubberDuck = 0x6a7a67f00005c49200000000000000050000000500000005;
@@ -99,9 +97,9 @@ contract Deployer is Script {
             id: extensionID,
             name: "Crazy Hermit",
             materials: [
-                Material({quantity: 20, item: kiki}), // these are what it costs to construct the factory
-                Material({quantity: 10, item: semiote}),
-                Material({quantity: 10, item: bouba}),
+                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
+                Material({quantity: 10, item: ItemUtils.Semiote()}),
+                Material({quantity: 10, item: ItemUtils.Bouba()}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [
