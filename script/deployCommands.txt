@@ -1,0 +1,15 @@
+Deploy Liams Lambs
+BUILDING_KIND_EXTENSION_ID=235235235 GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy_liams_lambs.sol --broadcast --verify --rpc-url "https://network-ds-test.dev.playmint.com"
+
+Deploy Demonic Altar
+BUILDING_KIND_EXTENSION_ID=624572457 GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy_altar.sol --broadcast --verify --rpc-url "https://network-ds-test.dev.playmint.com"
+
+DeploySquidShack
+BUILDING_KIND_EXTENSION_ID=98736496 GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy_squid_shack.sol --broadcast --verify --rpc-url "https://network-ds-test.dev.playmint.com"
+
+
+
+
+
+Green Bin
+BUILDING_KIND_EXTENSION_ID=902872 GAME_ADDRESS=0x1D8e3A7Dc250633C192AC1bC9D141E1f95C419AB forge script script/Deploy_green_bin.sol --broadcast --verify --rpc-url "https://network-ds-test.dev.playmint.com"
