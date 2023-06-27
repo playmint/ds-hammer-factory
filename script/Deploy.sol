@@ -57,7 +57,7 @@ contract Deployer is Script {
         vm.startBroadcast(playerDeploymentKey);
 
         // deploy the hammer and hammer factory
-        bytes24 hammerItem    = registerHammerItem(ds, extensionID);
+        bytes24 hammerItem = registerHammerItem(ds, extensionID);
         bytes24 hammerFactory = registerHammerFactory(ds, extensionID, hammerItem);
 
         // dump deployed ids
@@ -69,49 +69,54 @@ contract Deployer is Script {
 
     // register a new item id
     function registerHammerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
-        return ItemUtils.register(ds, ItemConfig({
-            id: extensionID,
-            name: "Hammer",
-            icon: "15-38",
-            life: 10,
-            defense: 0,
-            attack: 6,
-            stackable: false,
-            implementation: address(0),
-            plugin: ""
-        }));
+        return ItemUtils.register(
+            ds,
+            ItemConfig({
+                id: extensionID,
+                name: "Hammer",
+                icon: "15-38",
+                greenGoo: 10, //In combat, Green Goo increases life
+                blueGoo: 0, //In combat, Blue Goo increases defense
+                redGoo: 6, //In combat, Red Goo increases attack
+                stackable: false,
+                implementation: address(0),
+                plugin: ""
+            })
+        );
     }
 
     // register a new
     function registerHammerFactory(Game ds, uint64 extensionID, bytes24 hammer) public returns (bytes24 buildingKind) {
-
         // find the base item ids we will use as inputs for our hammer factory
         bytes24 none = 0x0;
-        bytes24 kiki = ItemUtils.Kiki();
-        bytes24 bouba = ItemUtils.Bouba();
-        bytes24 semiote = ItemUtils.Semiote();
+        bytes24 glassGreenGoo = ItemUtils.GlassGreenGoo();
+        bytes24 beakerBlueGoo = ItemUtils.BeakerBlueGoo();
+        bytes24 flaskRedGoo = ItemUtils.FlaskRedGoo();
 
         // register a new building kind
-        return BuildingUtils.register(ds, BuildingConfig({
-            id: extensionID,
-            name: "Hammer Factory",
-            materials: [
-                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
-                Material({quantity: 10, item: bouba}),
-                Material({quantity: 10, item: semiote}),
-                Material({quantity: 0, item: none})
-            ],
-            inputs: [
-                Input({quantity: 20, item: kiki}), // these are required inputs to get the output
-                Input({quantity: 12, item: semiote}),
-                Input({quantity: 0, item: none}),
-                Input({quantity: 0, item: none})
-            ],
-            outputs: [
-                Output({quantity: 1, item: hammer}) // this is the output that can be crafted given the inputs
-            ],
-            implementation: address(new HammerFactory()),
-            plugin: vm.readFile("src/HammerFactory.js")
-        }));
+        return BuildingUtils.register(
+            ds,
+            BuildingConfig({
+                id: extensionID,
+                name: "Hammer Factory",
+                materials: [
+                    Material({quantity: 10, item: glassGreenGoo}), // these are what it costs to construct the factory
+                    Material({quantity: 10, item: beakerBlueGoo}),
+                    Material({quantity: 10, item: flaskRedGoo}),
+                    Material({quantity: 0, item: none})
+                ],
+                inputs: [
+                    Input({quantity: 20, item: glassGreenGoo}), // these are required inputs to get the output
+                    Input({quantity: 12, item: flaskRedGoo}),
+                    Input({quantity: 0, item: none}),
+                    Input({quantity: 0, item: none})
+                ],
+                outputs: [
+                    Output({quantity: 1, item: hammer}) // this is the output that can be crafted given the inputs
+                ],
+                implementation: address(new HammerFactory()),
+                plugin: vm.readFile("src/HammerFactory.js")
+            })
+        );
     }
 }

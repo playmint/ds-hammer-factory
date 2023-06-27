@@ -9,7 +9,7 @@ import {Game} from "@ds/Game.sol";
 import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Rel, BiomeKind, DEFAULT_ZONE, Schema} from "@ds/schema/Schema.sol";
 import {ItemUtils} from "@ds/utils/ItemUtils.sol";
-import {Deployer} from '../script/Deploy.sol';
+import {Deployer} from "../script/Deploy.sol";
 
 using Schema for State;
 
@@ -26,7 +26,6 @@ uint8 constant ITEM_SLOT_1 = 1;
 uint64 constant BUILDING_KIND_EXTENSION_ID = 45342312;
 uint64 constant BUILDING_KIND_PLUGIN_ID = 45342312;
 
-
 contract HammerFactoryTest is Test {
     Game internal ds;
     Dispatcher internal dispatcher;
@@ -39,7 +38,6 @@ contract HammerFactoryTest is Test {
     address aliceAccount;
 
     function setUp() public {
-        
         // setup users
         alicePrivateKey = 0xA11CE;
         aliceAccount = vm.addr(alicePrivateKey);
@@ -55,12 +53,11 @@ contract HammerFactoryTest is Test {
     }
 
     function testConstructAndCraft() public {
-
         // alice is a player
         vm.startPrank(aliceAccount);
 
         // alice uses the deploy script to register her new item and building kinds
-        bytes24 hammerItem    = deployer.registerHammerItem(ds, BUILDING_KIND_EXTENSION_ID);
+        bytes24 hammerItem = deployer.registerHammerItem(ds, BUILDING_KIND_EXTENSION_ID);
         bytes24 hammerFactory = deployer.registerHammerFactory(ds, BUILDING_KIND_EXTENSION_ID, hammerItem);
 
         // ...she has a seeker at tile 0,0,0
@@ -94,14 +91,14 @@ contract HammerFactoryTest is Test {
         _discover(0, 0, 0);
         dispatcher.dispatch(abi.encodeCall(Actions.SPAWN_SEEKER, (seeker)));
         bytes24[] memory items = new bytes24[](3);
-        items[0] = ItemUtils.Kiki();
-        items[1] = ItemUtils.Bouba();
-        items[2] = ItemUtils.Semiote();
+        items[0] = ItemUtils.GlassGreenGoo();
+        items[1] = ItemUtils.FlaskRedGoo();
+        items[2] = 0x0;
 
         uint64[] memory balances = new uint64[](3);
-        balances[0] = 100;
-        balances[1] = 100;
-        balances[2] = 100;
+        balances[0] = 20;
+        balances[1] = 12;
+        balances[2] = 0;
 
         uint64 seekerBag = uint64(uint256(keccak256(abi.encode(seeker))));
         dispatcher.dispatch(
@@ -147,9 +144,10 @@ contract HammerFactoryTest is Test {
         // magic required construction materials into the construct slot
         bytes24 buildingBag = Node.Bag(uint64(uint256(keccak256(abi.encode(buildingInstance)))));
         state.setEquipSlot(buildingInstance, 0, buildingBag);
-        state.setItemSlot(buildingBag, 0, ItemUtils.Kiki(), 25);
-        state.setItemSlot(buildingBag, 1, ItemUtils.Bouba(), 25);
-        state.setItemSlot(buildingBag, 2, ItemUtils.Semiote(), 25);
+        state.setItemSlot(buildingBag, 0, ItemUtils.GlassGreenGoo(), 10);
+        state.setItemSlot(buildingBag, 1, ItemUtils.BeakerBlueGoo(), 10);
+        state.setItemSlot(buildingBag, 2, ItemUtils.FlaskRedGoo(), 10);
+
         // construct our building
         dispatcher.dispatch(abi.encodeCall(Actions.CONSTRUCT_BUILDING_SEEKER, (seeker, buildingKind, q, r, s)));
         return buildingInstance;
