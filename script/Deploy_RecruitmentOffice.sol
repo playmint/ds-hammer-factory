@@ -8,7 +8,7 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Schema, State} from "@ds/schema/Schema.sol";
 import {ItemUtils, ItemConfig} from "@ds/utils/ItemUtils.sol";
 import {BuildingUtils, BuildingConfig, Material, Input, Output} from "@ds/utils/BuildingUtils.sol";
-import {CrazyHermit} from "../src/CrazyHermit.sol";
+import {RecruitmentOffice} from "../src/RecruitmentOffice.sol";
 
 using Schema for State;
 
@@ -56,63 +56,67 @@ contract Deployer is Script {
         // connect as the player...
         vm.startBroadcast(playerDeploymentKey);
 
-        // deploy the new item and building
-        bytes24 newItem = registerItem(ds, extensionID);
-        bytes24 building = registerBuilding(ds, extensionID, newItem);
+        // deploy the hammer and hammer factory
+        //bytes24 hammerItem = registerHammerItem(ds, extensionID);
+        bytes24 hammerFactory = registerHammerFactory(ds, extensionID, 0x0);
 
         // dump deployed ids
-        console2.log("ItemKind", uint256(bytes32(newItem)));
-        console2.log("BuildingKind", uint256(bytes32(building)));
+        //console2.log("ItemKind", uint256(bytes32(hammerItem)));
+        console2.log("BuildingKind", uint256(bytes32(hammerFactory)));
 
         vm.stopBroadcast();
     }
 
+    /*
     // register a new item id
-    function registerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
-        return ItemUtils.register(ds, ItemConfig({
-            id: extensionID,
-            name: "Dismembered Hand",
-            icon: "01-140",
-            life: 100,
-            defense: 0,
-            attack: 0,
-            stackable: false,
-            implementation: address(0),
-            plugin: ""
-        }));
+    function registerHammerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
+        return ItemUtils.register(
+            ds,
+            ItemConfig({
+                id: extensionID,
+                name: "Hammer",
+                icon: "15-38",
+                greenGoo: 10, //In combat, Green Goo increases life
+                blueGoo: 0, //In combat, Blue Goo increases defense
+                redGoo: 6, //In combat, Red Goo increases attack
+                stackable: false,
+                implementation: address(0),
+                plugin: ""
+            })
+        );
     }
+    */
 
-    // register the new building
-    function registerBuilding(Game ds, uint64 extensionID, bytes24 newItem) public returns (bytes24 buildingKind) {
-
-        // find the base item ids we will use as inputs
+    // register a new
+    function registerHammerFactory(Game ds, uint64 extensionID, bytes24 hammer) public returns (bytes24 buildingKind) {
+        // find the base item ids we will use as inputs for our hammer factory
         bytes24 none = 0x0;
-        bytes24 kiki = ItemUtils.Kiki();
-        bytes24 superKiki = 0x6a7a67f00005c49300000001000000140000000000000000;
-        bytes24 megaKiki = 0x6a7a67f00005c49400000001000000c80000000000000000;
-        bytes24 rubberDuck = 0x6a7a67f00005c49200000000000000050000000500000005;
+        bytes24 unobtanium = 0x6a7a67f00004a0bf00000001000000190000001900000019;
 
-
-        return BuildingUtils.register(ds, BuildingConfig({
-            id: extensionID,
-            name: "Crazy Hermit",
-            materials: [
-                Material({quantity: 10, item: kiki}), // these are what it costs to construct the factory
-                Material({quantity: 10, item: ItemUtils.Semiote()}),
-                Material({quantity: 10, item: ItemUtils.Bouba()}),
-                Material({quantity: 0, item: none})
-            ],
-            inputs: [
-                Input({quantity: 1, item: kiki}), // these are required inputs to get the outpu
-                Input({quantity: 1, item: superKiki}),
-                Input({quantity: 1, item: megaKiki}),
-                Input({quantity: 0, item: none})
-            ],
-            outputs: [
-                Output({quantity: 1, item: newItem}) // this is the output that can be crafted given the inputs
-            ],
-            implementation: address(new CrazyHermit()),
-            plugin: vm.readFile("src/CrazyHermit.js")
-        }));
+        // register a new building kind
+        return BuildingUtils.register(
+            ds,
+            BuildingConfig({
+                id: extensionID,
+                name: "Recruitment Office",
+                materials: [
+                    Material({quantity: 10, item: ItemUtils.GlassGreenGoo()}), // these are what it costs to construct the factory
+                    Material({quantity: 10, item: ItemUtils.BeakerBlueGoo()}),
+                    Material({quantity: 10, item: ItemUtils.FlaskRedGoo()}),
+                    Material({quantity: 0, item: none})
+                ],
+                inputs: [
+                    Input({quantity: 0, item: none}), // these are required inputs to get the output
+                    Input({quantity: 0, item: none}),
+                    Input({quantity: 0, item: none}),
+                    Input({quantity: 0, item: none})
+                ],
+                outputs: [
+                    Output({quantity: 1, item: hammer}) // this is the output that can be crafted given the inputs
+                ],
+                implementation: address(new RecruitmentOffice()),
+                plugin: vm.readFile("src/RecruitmentOffice.js")
+            })
+        );
     }
 }

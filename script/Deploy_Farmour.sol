@@ -73,9 +73,9 @@ contract Deployer is Script {
             id: extensionID,
             name: "Headphones",
             icon: "08-16",
-            life: 250,
-            defense: 250,
-            attack: 250,
+            greenGoo: 250,
+            blueGoo: 250,
+            redGoo: 250,
             stackable: false,
             implementation: address(0),
             plugin: ""
@@ -88,7 +88,7 @@ contract Deployer is Script {
         // find the base item ids we will use as inputs
         bytes24 none = 0x0;
         bytes24 unobtanium = 0x6a7a67f00004a0bf00000001000000190000001900000019;
-        bytes24 bouba = ItemUtils.Bouba();
+        bytes24 beakerBlue = ItemUtils.BeakerBlueGoo();
 
 
         return BuildingUtils.register(ds, BuildingConfig({
@@ -96,8 +96,8 @@ contract Deployer is Script {
             name: "fArmour",
             materials: [
                 Material({quantity: 10, item: unobtanium}), // these are what it costs to construct the factory
-                Material({quantity: 100, item: bouba}),
-                Material({quantity: 100, item: bouba}),
+                Material({quantity: 100, item: beakerBlue}),
+                Material({quantity: 100, item: beakerBlue}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [

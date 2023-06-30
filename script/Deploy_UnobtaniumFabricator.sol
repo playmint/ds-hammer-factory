@@ -73,9 +73,9 @@ contract Deployer is Script {
             id: extensionID,
             name: "Unobtanium",
             icon: "22-188",
-            life: 25,
-            defense: 25,
-            attack: 25,
+            greenGoo: 25,
+            blueGoo: 25,
+            redGoo: 25,
             stackable: true,
             implementation: address(0),
             plugin: ""
@@ -87,24 +87,24 @@ contract Deployer is Script {
 
         // find the base item ids we will use as inputs
         bytes24 none = 0x0;
-        bytes24 kiki = ItemUtils.Kiki();
-        bytes24 bouba = ItemUtils.Bouba();
-        bytes24 semiote = ItemUtils.Semiote();
+        bytes24 greeny = ItemUtils.GlassGreenGoo();
+        bytes24 bluey = ItemUtils.BeakerBlueGoo();
+        bytes24 redey = ItemUtils.FlaskRedGoo();
 
 
         return BuildingUtils.register(ds, BuildingConfig({
             id: extensionID,
             name: "Unobtanium Fabricator",
             materials: [
-                Material({quantity: 100, item: kiki}), // these are what it costs to construct the factory
-                Material({quantity: 100, item: semiote}),
-                Material({quantity: 100, item: bouba}),
+                Material({quantity: 100, item: greeny}), // these are what it costs to construct the factory
+                Material({quantity: 100, item: bluey}),
+                Material({quantity: 100, item: redey}),
                 Material({quantity: 0, item: none})
             ],
             inputs: [
-                Input({quantity: 100, item: kiki}), // these are required inputs to get the outpu
-                Input({quantity: 100, item: semiote}),
-                Input({quantity: 100, item: bouba}),
+                Input({quantity: 100, item: greeny}), // these are required inputs to get the outpu
+                Input({quantity: 100, item: bluey}),
+                Input({quantity: 100, item: redey}),
                 Input({quantity: 0, item: none})
             ],
             outputs: [
