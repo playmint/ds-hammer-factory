@@ -8,7 +8,7 @@ import {Actions} from "@ds/actions/Actions.sol";
 import {Node, Schema, State} from "@ds/schema/Schema.sol";
 import {ItemUtils, ItemConfig} from "@ds/utils/ItemUtils.sol";
 import {BuildingUtils, BuildingConfig, Material, Input, Output} from "@ds/utils/BuildingUtils.sol";
-import {BottleBank} from "../src/BottleBank.sol";
+import {BuildingKindImplementation} from "../src/Building.sol";
 
 using Schema for State;
 
@@ -28,23 +28,23 @@ contract Deployer is Script {
         Game ds = Game(gameAddr);
 
         // BUILDING_KIND_EXTENSION_ID is the unique identifier for your building
-        uint64 extensionID = uint64(uint256(keccak256(abi.encode("farms-bottle-bank"))));
+        uint64 extensionID = uint64(uint256(keccak256(abi.encode("farms-chat"))));
 
         // connect as the player...
         vm.startBroadcast(playerDeploymentKey);
 
         // deploy
-        bytes24 bottleBank = registerBottleBank(ds, extensionID);
+        bytes24 building = register(ds, extensionID);
 
         // dump deployed ids
-        console2.log("BuildingKind", uint256(bytes32(bottleBank)));
+        console2.log("BuildingKind", uint256(bytes32(building)));
 
         vm.stopBroadcast();
     }
 
 
     // register a new
-    function registerBottleBank(Game ds, uint64 extensionID) public returns (bytes24 buildingKind) {
+    function register(Game ds, uint64 extensionID) public returns (bytes24 buildingKind) {
         bytes24 none = 0x0;
         bytes24 glassGreenGoo = ItemUtils.GlassGreenGoo();
         bytes24 beakerBlueGoo = ItemUtils.BeakerBlueGoo();
@@ -55,11 +55,11 @@ contract Deployer is Script {
             ds,
             BuildingConfig({
                 id: extensionID,
-                name: "Saftey Deposit Box",
+                name: "Telegraph Post",
                 materials: [
-                    Material({quantity: 100, item: glassGreenGoo}),
-                    Material({quantity: 100, item: beakerBlueGoo}),
-                    Material({quantity: 100, item: flaskRedGoo}),
+                    Material({quantity: 50, item: glassGreenGoo}),
+                    Material({quantity: 50, item: beakerBlueGoo}),
+                    Material({quantity: 50, item: flaskRedGoo}),
                     Material({quantity: 0, item: none})
                 ],
                 inputs: [
@@ -71,8 +71,8 @@ contract Deployer is Script {
                 outputs: [
                     Output({quantity: 0, item: none})
                 ],
-                implementation: address(new BottleBank()),
-                plugin: vm.readFile("src/BottleBank.js")
+                implementation: address(new BuildingKindImplementation()),
+                plugin: vm.readFile("src/Building.js")
             })
         );
     }
