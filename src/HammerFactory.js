@@ -22,7 +22,7 @@ export default function update({ selected, world }) {
     const out0 = expectedOutputs?.find(slot => slot.key == 0);
 
     // try to detect if the input slots contain enough stuff to craft
-    const canCraft = selectedEngineer
+    const canCraft = selectedMobileUnit
         && want0 && got0 && want0.balance == got0.balance
         && want1 && got1 && want1.balance == got1.balance;
 
@@ -39,7 +39,7 @@ export default function update({ selected, world }) {
         ds.dispatch(
             {
                 name: 'BUILDING_USE',
-                args: [selectedBuilding.id, selectedEngineer.id, []]
+                args: [selectedBuilding.id, selectedMobileUnit.id, []]
             },
         );
 
