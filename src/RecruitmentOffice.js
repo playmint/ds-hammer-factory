@@ -86,28 +86,51 @@ export default function update({ selected, world }) {
 
     if (totalGoo < 100) {
         statsHtml += "<br>PUNY WEAKLING!! You need to be at least " + (100 - totalGoo) + " goo stronger!</p>";
+
+        return {
+            version: 1,
+            components: [
+                {
+                    type: 'building',
+                    id: 'recruitment-office',
+                    title: 'Recruitment Office',
+                    summary: 'USE me and we\'ll see if you\'re strong enough to join our team',
+                    content: [
+                        {
+                            id: 'default',
+                            type: 'inline',
+                            html: statsHtml
+                        },
+                    ],
+                },
+            ],
+        };
+
     }
     else {
         statsHtml += "<br>You are tough enough to join us!</p>";
+
+        return {
+            version: 1,
+            components: [
+                {
+                    type: 'building',
+                    id: 'recruitment-office',
+                    title: 'Recruitment Office',
+                    summary: 'USE me and we\'ll see if you\'re strong enough to join our team',
+                    content: [
+                        {
+                            id: 'default',
+                            type: 'inline',
+                            buttons: [{ text: 'Join the Team', type: 'action', action: craft, disabled: false }],
+                            html: statsHtml
+                        },
+                    ],
+                },
+            ],
+        };
     }
 
 
-    return {
-        version: 1,
-        components: [
-            {
-                type: 'building',
-                id: 'recruitment-office',
-                title: 'Recruitment Office',
-                summary: 'USE me and we\'ll see if you\'re strong enough to join our team',
-                content: [
-                    {
-                        id: 'default',
-                        type: 'inline',
-                        html: statsHtml
-                    },
-                ],
-            },
-        ],
-    };
+    
 }
