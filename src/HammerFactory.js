@@ -5,7 +5,7 @@ export default function update({ selected, world }) {
     const { tiles, seeker } = selected || {};
     const selectedTile = tiles && tiles.length === 1 ? tiles[0] : undefined;
     const selectedBuilding = selectedTile?.building;
-    const selectedEngineer = seeker;
+    const selectedMobileUnit = seeker;
 
     // fetch the expected inputs item kinds
     const requiredInputs = selectedBuilding?.kind?.inputs || [];
@@ -27,12 +27,12 @@ export default function update({ selected, world }) {
         && want1 && got1 && want1.balance == got1.balance;
 
     const craft = () => {
-        if (!selectedEngineer) {
-            ds.log('no selected engineer');
+        if (!selectedMobileUnit) {
+            ds.log('no unit selected');
             return;
         }
         if (!selectedBuilding) {
-            ds.log('no selected building');
+            ds.log('no building selected');
             return;
         }
 
