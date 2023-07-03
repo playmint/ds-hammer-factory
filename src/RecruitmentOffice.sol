@@ -10,7 +10,7 @@ contract RecruitmentOffice is BuildingKind {
 
     function use(Game ds, bytes24 buildingInstance, bytes24, /*seeker*/ bytes calldata /*payload*/) public {
 
-        //ds.getDispatcher().dispatch(abi.encodeCall(Actions.CRAFT, (buildingInstance)));
+        ds.getDispatcher().dispatch(abi.encodeCall(Actions.CRAFT, (buildingInstance)));
 
     }
 }

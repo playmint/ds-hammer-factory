@@ -14,17 +14,44 @@ export default function update({ selected, world }) {
 
     const { tiles, seeker } = selected || {};
     const selectedTile = tiles && tiles.length === 1 ? tiles[0] : undefined;
-    const selectedEngineer = seeker;
+    const selectedMobileUnit = seeker;
+    const selectedBuilding = selectedTile?.building;
 
 
-    var engineerDistance = 0;
-    if (selectedEngineer) {
-        engineerDistance = distance(selectedEngineer.nextLocation.tile, selectedTile);
+
+
+
+
+
+
+    //craft function - can be called if the unit is powerful enough
+    const craft = () => {
+        if (!selectedMobileUnit) {
+            ds.log('no selected unit');
+            return;
+        }
+        if (!selectedBuilding) {
+            ds.log('no selected building');
+            return;
+        }
+
+        ds.dispatch(
+            {
+                name: 'BUILDING_USE',
+                args: [selectedBuilding.id, selectedMobileUnit.id, []]
+            },
+        );
+    };
+
+
+    var mobileUnitDistance = 0;
+    if (selectedMobileUnit) {
+        mobileUnitDistance = distance(selectedMobileUnit.nextLocation.tile, selectedTile);
     }
 
 
     //Show this if there is no selected engineer OR the engineer is not adjacent to the building's tile
-    if (!selectedEngineer || engineerDistance > 1) {
+    if (!selectedMobileUnit || mobileUnitDistance > 1) {
         return {
             version: 1,
             components: [
@@ -44,10 +71,10 @@ export default function update({ selected, world }) {
     var totalRedGoo = 0;
 
 
-    for (var j = 0; j < selectedEngineer.bags.length; j++) {
+    for (var j = 0; j < selectedMobileUnit.bags.length; j++) {
         for (var i = 0; i < 4; i++) {
-            if (selectedEngineer.bags[j].bag.slots[i]) {
-                var slot = selectedEngineer.bags[j].bag.slots[i];
+            if (selectedMobileUnit.bags[j].bag.slots[i]) {
+                var slot = selectedMobileUnit.bags[j].bag.slots[i];
 
                 if (slot.item && slot.balance > 0) {
 
@@ -107,8 +134,23 @@ export default function update({ selected, world }) {
         };
 
     }
-    else {
+    else {        
         statsHtml += "<br>You are tough enough to join us!</p>";
+
+        // fetch the expected inputs item kinds
+        const requiredInputs = selectedBuilding?.kind?.inputs || [];
+        const want0 = requiredInputs.find(inp => inp.key == 0);
+
+        // fetch what is currently in the input slots
+        const inputSlots = selectedBuilding?.bags.find(b => b.key == 0).bag?.slots || [];
+        const got0 = inputSlots?.find(slot => slot.key == 0);
+
+        // fetch our output item details
+        const expectedOutputs = selectedBuilding?.kind?.outputs || [];
+        const out0 = expectedOutputs?.find(slot => slot.key == 0);
+
+        // try to detect if the input slots contain enough stuff to craft
+        const canCraft = selectedMobileUnit && want0 && got0 && want0.balance == got0.balance;
 
         return {
             version: 1,
@@ -117,13 +159,17 @@ export default function update({ selected, world }) {
                     type: 'building',
                     id: 'recruitment-office',
                     title: 'Recruitment Office',
-                    summary: 'USE me and we\'ll see if you\'re strong enough to join our team',
+                    summary: 'You are STRONG like us! You may craft your badge of allegiance',
                     content: [
                         {
+                            //id: 'default',
+                            //type: 'inline',
+                            //html: statsHtml
+                            
                             id: 'default',
                             type: 'inline',
-                            buttons: [{ text: 'Join the Team', type: 'action', action: craft, disabled: false }],
-                            html: statsHtml
+                            buttons: [{ text: 'Join the Team', type: 'action', action: craft, disabled: !canCraft }],
+                            //html: statsHtml                       
                         },
                     ],
                 },

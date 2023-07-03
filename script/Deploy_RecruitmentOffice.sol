@@ -57,38 +57,38 @@ contract Deployer is Script {
         vm.startBroadcast(playerDeploymentKey);
 
         // deploy the hammer and hammer factory
-        //bytes24 hammerItem = registerHammerItem(ds, extensionID);
-        bytes24 hammerFactory = registerHammerFactory(ds, extensionID, 0x0);
+        bytes24 item = registerItem(ds, extensionID);
+        bytes24 building = registerBuilding(ds, extensionID, 0x0);
 
         // dump deployed ids
-        //console2.log("ItemKind", uint256(bytes32(hammerItem)));
-        console2.log("BuildingKind", uint256(bytes32(hammerFactory)));
+        console2.log("ItemKind", uint256(bytes32(item)));
+        console2.log("BuildingKind", uint256(bytes32(building)));
 
         vm.stopBroadcast();
     }
 
-    /*
+    
     // register a new item id
-    function registerHammerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
+    function registerItem(Game ds, uint64 extensionID) public returns (bytes24 itemKind) {
         return ItemUtils.register(
             ds,
             ItemConfig({
                 id: extensionID,
-                name: "Hammer",
-                icon: "15-38",
-                greenGoo: 10, //In combat, Green Goo increases life
-                blueGoo: 0, //In combat, Blue Goo increases defense
-                redGoo: 6, //In combat, Red Goo increases attack
+                name: "Badge of Allegiance",
+                icon: "15-127",
+                greenGoo: 0, //In combat, Green Goo increases life
+                blueGoo: 100, //In combat, Blue Goo increases defense
+                redGoo: 0, //In combat, Red Goo increases attack
                 stackable: false,
                 implementation: address(0),
                 plugin: ""
             })
         );
     }
-    */
+    
 
     // register a new
-    function registerHammerFactory(Game ds, uint64 extensionID, bytes24 hammer) public returns (bytes24 buildingKind) {
+    function registerBuilding(Game ds, uint64 extensionID, bytes24 thisItem) public returns (bytes24 buildingKind) {
         // find the base item ids we will use as inputs for our hammer factory
         bytes24 none = 0x0;
         bytes24 unobtanium = 0x6a7a67f00004a0bf00000001000000190000001900000019;
@@ -106,13 +106,13 @@ contract Deployer is Script {
                     Material({quantity: 0, item: none})
                 ],
                 inputs: [
-                    Input({quantity: 0, item: none}), // these are required inputs to get the output
+                    Input({quantity: 100, item: ItemUtils.BeakerBlueGoo()}), // these are required inputs to get the output
                     Input({quantity: 0, item: none}),
                     Input({quantity: 0, item: none}),
                     Input({quantity: 0, item: none})
                 ],
                 outputs: [
-                    Output({quantity: 1, item: hammer}) // this is the output that can be crafted given the inputs
+                    Output({quantity: 1, item: thisItem}) // this is the output that can be crafted given the inputs
                 ],
                 implementation: address(new RecruitmentOffice()),
                 plugin: vm.readFile("src/RecruitmentOffice.js")
