@@ -20,10 +20,6 @@ export default function update({ selected, world }) {
 
 
 
-
-
-
-
     //craft function - can be called if the unit is powerful enough
     const craft = () => {
         if (!selectedMobileUnit) {
@@ -59,7 +55,14 @@ export default function update({ selected, world }) {
                     type: 'building',
                     id: 'recruitment-office',
                     title: 'Recruitment Office',
-                    summary: "We only recruit the best! Show us what you're made of soldier!!"
+                    summary: "We only recruit the best! Show us what you're made of soldier!!",
+                    content: [
+                        {
+                            id: 'default',
+                            type: 'inline'
+                          //  html: statsHtml
+                        },
+                    ],
                 },
             ],
         };
@@ -112,7 +115,7 @@ export default function update({ selected, world }) {
     var totalGoo = totalGreenGoo + totalBlueGoo + totalRedGoo;
 
     if (totalGoo < 100) {
-        statsHtml += "<br>PUNY WEAKLING!! You need to be at least " + (100 - totalGoo) + " goo stronger!</p>";
+        statsHtml += "<br>PUNY WEAKLING!! You need to be at least " + (100 - totalGoo) + " goo stronger!<br>You are not allowed to craft our badge!</p>";
 
         return {
             version: 1,
@@ -165,7 +168,7 @@ export default function update({ selected, world }) {
                             id: 'default',
                             type: 'inline',
                             buttons: [{ text: 'Join the Team', type: 'action', action: craft, disabled: !canCraft }],
-                            //html: statsHtml                       
+                            html: statsHtml                       
                         },
                     ],
                 },

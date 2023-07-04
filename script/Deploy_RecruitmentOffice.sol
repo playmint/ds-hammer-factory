@@ -58,7 +58,7 @@ contract Deployer is Script {
 
         // deploy the hammer and hammer factory
         bytes24 item = registerItem(ds, extensionID);
-        bytes24 building = registerBuilding(ds, extensionID, 0x0);
+        bytes24 building = registerBuilding(ds, extensionID, item);
 
         // dump deployed ids
         console2.log("ItemKind", uint256(bytes32(item)));
