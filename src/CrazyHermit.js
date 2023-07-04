@@ -110,7 +110,7 @@ export default function update({ selected, world }) {
         );
 
         ds.log('The hermit cuts off his hand and gives it to you.');
-    };
+    }; 
 
     //Show this if there's a rubber duck
     if (hasRubberDuck) {
@@ -121,7 +121,7 @@ export default function update({ selected, world }) {
                     type: 'building',
                     id: 'crazy-hermit',
                     title: 'Crazy Hermit',
-                    summary: 'The crazy hermit looks in wonder at your rubber duck.\n"GIVE KIKIS?\" he asks.\nHe holds his hand out as if to offer a trade.',
+                    summary: 'The crazy hermit looks in wonder at your rubber duck.\n"GIVE GREEN GOO?\" he asks.\nHe holds his hand out as if to offer a trade.',
                     content: [
                         {
                             id: 'default',

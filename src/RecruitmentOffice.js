@@ -162,10 +162,6 @@ export default function update({ selected, world }) {
                     summary: 'You are STRONG like us! You may craft your badge of allegiance',
                     content: [
                         {
-                            //id: 'default',
-                            //type: 'inline',
-                            //html: statsHtml
-                            
                             id: 'default',
                             type: 'inline',
                             buttons: [{ text: 'Join the Team', type: 'action', action: craft, disabled: !canCraft }],
@@ -175,8 +171,5 @@ export default function update({ selected, world }) {
                 },
             ],
         };
-    }
-
-
-    
+    }   
 }
