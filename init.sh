@@ -24,7 +24,7 @@ function deploy() {
 	echo "${address}"
 }
 
-# deploy dawnseekers contracts
+# deploy downstream contracts
 DOWNSTREAM_ADDRESS=$(cd lib/ds-contracts && ./init.sh)
 EXTENSION_ADDRESS=$(deploy ./src/Game.sol:Extension --constructor-args "${DOWNSTREAM_ADDRESS}")
 echo "${EXTENSION_ADDRESS} extends ${DOWNSTREAM_ADDRESS}"
