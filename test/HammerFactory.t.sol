@@ -87,9 +87,9 @@ contract HammerFactoryTest is Test {
 
     function _spawnMobileUnitWithResources() private returns (bytes24) {
         sid++;
-        bytes24 mobileUnit = Node.Seeker(sid);
+        bytes24 mobileUnit = Node.MobileUnit(sid);
         _discover(0, 0, 0);
-        dispatcher.dispatch(abi.encodeCall(Actions.SPAWN_SEEKER, (mobileUnit)));
+        dispatcher.dispatch(abi.encodeCall(Actions.SPAWN_MOBILE_UNIT, (mobileUnit)));
         bytes24[] memory items = new bytes24[](3);
         items[0] = ItemUtils.GlassGreenGoo();
         items[1] = ItemUtils.FlaskRedGoo();
@@ -114,7 +114,7 @@ contract HammerFactoryTest is Test {
         bytes24 inputBag = state.getEquipSlot(buildingInstance, 0);
         dispatcher.dispatch(
             abi.encodeCall(
-                Actions.TRANSFER_ITEM_SEEKER, (mobileUnit, [mobileUnit, buildingInstance], [0, 0], [slot, slot], inputBag, qty)
+                Actions.TRANSFER_ITEM_MOBILE_UNIT, (mobileUnit, [mobileUnit, buildingInstance], [0, 0], [slot, slot], inputBag, qty)
             )
         );
     }
@@ -149,7 +149,7 @@ contract HammerFactoryTest is Test {
         state.setItemSlot(buildingBag, 2, ItemUtils.FlaskRedGoo(), 10);
 
         // construct our building
-        dispatcher.dispatch(abi.encodeCall(Actions.CONSTRUCT_BUILDING_SEEKER, (mobileUnit, buildingKind, q, r, s)));
+        dispatcher.dispatch(abi.encodeCall(Actions.CONSTRUCT_BUILDING_MOBILE_UNIT, (mobileUnit, buildingKind, q, r, s)));
         return buildingInstance;
     }
 }
