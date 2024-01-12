@@ -1,7 +1,7 @@
 # A Factory That Makes Hammers (in Downstream)
 
 ## The starting point for your own Downstream Building
-Documentation for how to ues this repository as the starting point for your own Downstream buildings can be found here: [Downstream - Developing a new building](https://github.com/playmint/ds/blob/main/docs/how-to-create-docs/developing-a-new-building.md)
+Documentation for how to ues this repository as the starting point for your own Downstream buildings can be found here: [Downstream - Developing a new building](https://github.com/playmint/ds/blob/main/docs/how-to/create-a-new-building.md)
 
 ## Deploy 
 To deploy the HammerFactory directly (although we reccomend you follow the instructions above to make it your own first):
